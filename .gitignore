@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# 环境变量（绝不上传密钥）
+.env
+.env.*
+secrets.py
+
+# 运行时数据（可选择不上传）
+data/agent_state.json
+data/market_context.json
+data/persona.md
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS
+.DS_Store
