@@ -31,13 +31,20 @@ HL_HEADERS = {"Content-Type": "application/json"}
 
 # 已验证的种子地址（从公开信息收集）
 SEED_ADDRESSES = {
-    # 从 Coinglass Hyperliquid 大户页面收集
+    # 自动更新时间: 2026-04-20 05:11 UTC
+    # 来源: Hyperliquid 排行榜 Top 10 (30D PnL)
+    "0x4ec8fe22a531a96c8a846aaf5cbef73202649a80": {"source": "leaderboard_30d", "rank": 1, "pnl_M": 721.44, "account_M": 501.38},
+    "0x8d68efbf06fb8cf932518bcb53705e674c4852dc": {"source": "leaderboard_30d", "rank": 2, "pnl_M": 185.37, "account_M": 685.07},
+    "0x393d0b87ed38fc779fd9611144ae649ba6082109": {"source": "leaderboard_30d", "rank": 3, "pnl_M": 27.06, "account_M": 761.00},
+    "0xa5b0edf6b55128e0ddae8e51ac538c3188401d41": {"source": "leaderboard_30d", "rank": 4, "pnl_M": 19.67, "account_M": 38.02},
+    "0xd3cb1823da2ff584dec3f49ef6a3eea51471e5bc": {"source": "leaderboard_30d", "rank": 5, "pnl_M": 11.40, "account_M": 9.25},
+    "0x6c8512516ce5669d35113a11ca8b8de322fd84f6": {"source": "leaderboard_30d", "rank": 6, "pnl_M": 10.41, "account_M": 36.71},
+    "0x61ceef212ff4a86933c69fb6aca2fe35d8f2a62b": {"source": "leaderboard_30d", "rank": 7, "pnl_M": 7.72, "account_M": 6.16},
+    "0x4eb8d907136189a34c9b087950211b6a566f7819": {"source": "leaderboard_30d", "rank": 8, "pnl_M": 7.16, "account_M": 99.48},
+    "0xa31441e058492bc7cfffda9aa7623c407ae83a81": {"source": "leaderboard_30d", "rank": 9, "pnl_M": 6.68, "account_M": 4.70},
+    "0xeadc152ac1014ace57c6b353f89adf5faffe9d55": {"source": "leaderboard_30d", "rank": 10, "pnl_M": 4.94, "account_M": 24.89},
+    # 已知大户（手动维护）
     "0xc6ab9ee8ad3647a12242a2afa43152be796f3391": {"source": "coinglass", "tier": "whale"},
-    # 从 Hyperliquid 排行榜页面手动记录（30D PnL Top 10）
-    # 注意：这些地址需要定期从排行榜页面更新
-    "0x4ec8b2a5e3f7d9c1b6a4e2f8d0c3b5a7e9f1d3c5": {"source": "leaderboard_30d", "rank": 1},
-    "0x8d68c3b2a1f4e7d9c5b3a6e8f0d2c4b6a8e0f2d4": {"source": "leaderboard_30d", "rank": 2},
-    "0x393d5b2c1a4e7f9d3b5c7a9e1f3d5b7c9a1e3f5": {"source": "leaderboard_30d", "rank": 3},
 }
 
 

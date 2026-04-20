@@ -1,0 +1,97 @@
+{
+  "updated_at": "2026-04-20T05:11:15.140390+00:00",
+  "updated_timestamp": 1776661875.1404052,
+  "total_count": 10,
+  "addresses": [
+    {
+      "rank": 1,
+      "address": "0x4ec8fe22a531a96c8a846aaf5cbef73202649a80",
+      "account_value": 501382268.76,
+      "pnl": 721439940.94,
+      "roi": 77367960.9,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:31.360046+00:00"
+    },
+    {
+      "rank": 2,
+      "address": "0x8d68efbf06fb8cf932518bcb53705e674c4852dc",
+      "account_value": 685068842.3,
+      "pnl": 185370710.43,
+      "roi": 37.07,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:35.828114+00:00"
+    },
+    {
+      "rank": 3,
+      "address": "0x393d0b87ed38fc779fd9611144ae649ba6082109",
+      "account_value": 761000801.88,
+      "pnl": 27059819.14,
+      "roi": 3.33,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:40.310524+00:00"
+    },
+    {
+      "rank": 4,
+      "address": "0xa5b0edf6b55128e0ddae8e51ac538c3188401d41",
+      "account_value": 38017329.15,
+      "pnl": 19670052.03,
+      "roi": 51.29,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:45.126466+00:00"
+    },
+    {
+      "rank": 5,
+      "address": "0xd3cb1823da2ff584dec3f49ef6a3eea51471e5bc",
+      "account_value": 9245865.74,
+      "pnl": 11400924.49,
+      "roi": 281.15,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:49.462434+00:00"
+    },
+    {
+      "rank": 6,
+      "address": "0x6c8512516ce5669d35113a11ca8b8de322fd84f6",
+      "account_value": 36711455.9,
+      "pnl": 10413564.1,
+      "roi": 57.31,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:53.971725+00:00"
+    },
+    {
+      "rank": 7,
+      "address": "0x61ceef212ff4a86933c69fb6aca2fe35d8f2a62b",
+      "account_value": 6159231.98,
+      "pnl": 7715691.98,
+      "roi": 90.78,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:10:58.121375+00:00"
+    },
+    {
+      "rank": 8,
+      "address": "0x4eb8d907136189a34c9b087950211b6a566f7819",
+      "account_value": 99479179.5,
+      "pnl": 7160606.75,
+      "roi": 7.76,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:11:02.490597+00:00"
+    },
+    {
+      "rank": 9,
+      "address": "0xa31441e058492bc7cfffda9aa7623c407ae83a81",
+      "account_value": 4698179.46,
+      "pnl": 6683666.31,
+      "roi": 44.69,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:11:07.110465+00:00"
+    },
+    {
+      "rank": 10,
+      "address": "0xeadc152ac1014ace57c6b353f89adf5faffe9d55",
+      "account_value": 24892761.49,
+      "pnl": 4937915.59,
+      "roi": 16.91,
+      "time_window": "30D",
+      "scraped_at": "2026-04-20T05:11:11.255445+00:00"
+    }
+  ]
+}
