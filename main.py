@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-币安广场运营系统智能体 — 主程序入口
-======================================
+币安广场运营系统智能体 — 主程序入口 v2.0
+==========================================
 用法：
   python3 main.py start        # 启动全自动发帖循环
   python3 main.py once         # 执行单次发帖
@@ -9,6 +9,9 @@
   python3 main.py scan         # 只执行感知层扫描（不发帖）
   python3 main.py build        # 启动灵魂提取访谈
   python3 main.py build-quick  # 快速访谈（每维度3题）
+  python3 main.py live         # 启动数字人直播（全自动持续循环）
+  python3 main.py live-test    # 数字人直播单次测试
+  python3 main.py test-live    # 运行直播模块集成测试
 """
 
 import sys
@@ -60,6 +63,28 @@ def main():
     elif cmd == "build-quick":
         builder = PersonaBuilder()
         builder.run_interview(quick_mode=True)
+
+    elif cmd == "live":
+        from live.stream.live_controller import LiveController
+        print("[主程序] 启动数字人直播模块（全自动持续循环）...")
+        print("[主程序] 按 Ctrl+C 停止直播")
+        controller = LiveController()
+        controller.start(mock_mode=False)
+
+    elif cmd == "live-test":
+        import json
+        from live.stream.live_controller import LiveController
+        print("[主程序] 启动数字人直播模块（单次测试模式）...")
+        controller = LiveController()
+        status = controller.run_once()
+        print("\n=== 直播测试完成 ===")
+        print(json.dumps(status, ensure_ascii=False, indent=2))
+
+    elif cmd == "test-live":
+        import subprocess
+        print("[主程序] 运行直播模块集成测试...")
+        subprocess.run([sys.executable, "test_live_module.py"],
+                       cwd=os.path.dirname(__file__))
 
     else:
         print(__doc__)
