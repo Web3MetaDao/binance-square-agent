@@ -1,0 +1,122 @@
+{
+  "overview": {
+    "timestamp": "2026-04-19 23:22",
+    "btc_price": 74492.7,
+    "btc_change": -1.334,
+    "eth_price": 2281.03,
+    "eth_change": -2.513,
+    "market_sentiment": "恐惧",
+    "market_trend": "温和下跌",
+    "btc_volume_b": 0.96
+  },
+  "major_coins": [
+    {
+      "symbol": "BTC",
+      "price": 74492.7,
+      "change_pct": -1.334,
+      "volume_usdt": 961356093.3398087,
+      "high": 76240.66,
+      "low": 73724.31,
+      "signal": "偏空",
+      "action": "谨慎操作"
+    },
+    {
+      "symbol": "ETH",
+      "price": 2281.03,
+      "change_pct": -2.513,
+      "volume_usdt": 610804838.492092,
+      "high": 2350.24,
+      "low": 2252.72,
+      "signal": "强烈看空",
+      "action": "注意风控"
+    },
+    {
+      "symbol": "BNB",
+      "price": 621.48,
+      "change_pct": -0.332,
+      "volume_usdt": 59664572.9247,
+      "high": 628.36,
+      "low": 615.0,
+      "signal": "中性",
+      "action": "观望为主"
+    },
+    {
+      "symbol": "SOL",
+      "price": 84.36,
+      "change_pct": -1.483,
+      "volume_usdt": 228751550.22252,
+      "high": 87.12,
+      "low": 82.94,
+      "signal": "偏空",
+      "action": "谨慎操作"
+    },
+    {
+      "symbol": "XRP",
+      "price": 1.4113,
+      "change_pct": -1.48,
+      "volume_usdt": 137171508.20424,
+      "high": 1.447,
+      "low": 1.3909,
+      "signal": "偏空",
+      "action": "谨慎操作"
+    }
+  ],
+  "trending": [
+    {
+      "symbol": "W",
+      "price": 0.0126,
+      "change_pct": 4.132,
+      "volume_usdt": 4359926.07803,
+      "high": 0.0131,
+      "low": 0.012,
+      "heat_score": 2.5,
+      "recommend_level": "强烈推荐",
+      "recommend_reason": "热度最高，资金流入明显"
+    },
+    {
+      "symbol": "DOGE",
+      "price": 0.09383,
+      "change_pct": -1.044,
+      "volume_usdt": 102949997.39616,
+      "high": 0.09643,
+      "low": 0.09255,
+      "heat_score": -0.21,
+      "recommend_level": "重点关注",
+      "recommend_reason": "涨势良好，值得布局"
+    },
+    {
+      "symbol": "APT",
+      "price": 0.92,
+      "change_pct": -0.969,
+      "volume_usdt": 9066486.49529,
+      "high": 0.961,
+      "low": 0.908,
+      "heat_score": -0.55,
+      "recommend_level": "重点关注",
+      "recommend_reason": "涨势良好，值得布局"
+    },
+    {
+      "symbol": "SHIB",
+      "price": 5.96e-06,
+      "change_pct": -1.161,
+      "volume_usdt": 5658072.80893746,
+      "high": 6.11e-06,
+      "low": 5.86e-06,
+      "heat_score": -0.67,
+      "recommend_level": "一般关注",
+      "recommend_reason": "有一定热度，可小仓参与"
+    },
+    {
+      "symbol": "NOT",
+      "price": 0.000379,
+      "change_pct": -1.302,
+      "volume_usdt": 823319.405375,
+      "high": 0.000402,
+      "low": 0.000372,
+      "heat_score": -0.78,
+      "recommend_level": "一般关注",
+      "recommend_reason": "有一定热度，可小仓参与"
+    }
+  ],
+  "generated_at": "2026-04-19T23:22:12.183775"
+}
