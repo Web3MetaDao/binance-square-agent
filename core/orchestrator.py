@@ -121,6 +121,17 @@ class Orchestrator:
             print("[编排器] ⏳ 所有热点代币均在冷却中")
             return False
 
+        # ── 期货合约实时价格同步（热点模式）──
+        from utils.price_sync import get_futures_price
+        _coin = coin_info["coin"]
+        _fp = get_futures_price(_coin)
+        if _fp:
+            coin_info["mark_px"] = _fp["price"]
+            coin_info["change_24h"] = _fp["change_24h"]
+            coin_info["high_24h"] = _fp["high_24h"]
+            coin_info["low_24h"] = _fp["low_24h"]
+            print(f"[编排器] 💹 {_coin} 期货实时价格: ${_fp['price']:,.4f} ({_fp['change_24h']:+.2f}%)")
+
         # 生成内容
         print(f"\n[编排器] ✍️  生成 [{coin_info['tier']}级] {coin_info['coin']} 短贴...")
         context = {
@@ -330,6 +341,18 @@ class Orchestrator:
             "A" if selected_signal.get("priority", 3) == 2 else "B"
         )
 
+        # ── 期货合约实时价格同步（发帖前刷新，确保价格准确）──
+        from utils.price_sync import get_futures_price
+        futures_price_info = get_futures_price(coin)
+        if futures_price_info:
+            realtime_px = futures_price_info["price"]
+            realtime_chg = futures_price_info["change_24h"]
+            print(f"[编排器-聪明钱] 💹 {coin} 期货实时价格: ${realtime_px:,.4f} ({realtime_chg:+.2f}%)")
+        else:
+            realtime_px = sig_data.get("mark_px", 0)
+            realtime_chg = sig_data.get("change_24h", 0)
+            print(f"[编排器-聪明钱] ⚠️  {coin} 无期货合约，使用 Hyperliquid 价格")
+
         coin_info = {
             "coin": coin,
             "futures": futures,
@@ -342,8 +365,8 @@ class Orchestrator:
             "long_ratio": sig_data.get("long_ratio", 50),
             "net_direction": sig_data.get("net_direction", "NEUTRAL"),
             "total_size_usd": sig_data.get("total_size_usd", 0),
-            "mark_px": sig_data.get("mark_px", 0),
-            "change_24h": sig_data.get("change_24h", 0),
+            "mark_px": realtime_px,       # 期货合约实时价格
+            "change_24h": realtime_chg,   # 期货合约实时涨跌幅
             "funding_rate": sig_data.get("funding_rate", 0),
         }
 

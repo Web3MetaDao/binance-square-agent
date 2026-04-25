@@ -39,7 +39,7 @@ from openai import OpenAI
 from config.settings import (
     OPENAI_API_KEY, OPENAI_BASE_URL, LLM_MODEL,
     POST_MIN_CHARS, POST_MAX_CHARS, DAILY_LIMIT,
-    WRITE_TO_EARN_URL, FUTURES_MAP,
+    WRITE_TO_EARN_URL,
 )
 from layers.executor import SquarePoster, QuotaController, log_post
 from core.state import load_state, save_state
@@ -66,7 +66,13 @@ BANNED_PHRASES = [
 ]
 
 # CTA 池（内容挖矿引导）
-W2E_CTA_POOL = [""]
+W2E_CTA_POOL = [
+    "💡 点击上方 ${coin} 标签查看实时行情，广场内交易还能给我贡献一点挖矿收益😄",
+    "📊 感兴趣的话点击 ${coin} 看看实时价格，广场内容挖矿进行中！",
+    "🎯 广场内容挖矿进行中——点击 ${coin} 标签参与交易，我们一起在链上留下痕迹！",
+    "🔥 点击 ${coin} 标签直接在广场交易，手续费的一部分会变成我的创作收益，感谢支持！",
+    "👇 点击 ${coin} 查看实时K线，广场交易即挖矿，一起赚！",
+]
 
 
 # ── 核心类 ────────────────────────────────────────────────────────────────────
@@ -94,7 +100,7 @@ class W2EPostGenerator:
             return []
         with open(W2E_FILE, encoding="utf-8") as f:
             data = json.load(f)
-        creators = data.get("creators", data.get("top_creators", []))
+        creators = data.get("top_creators", [])
         logger.info(f"加载 {len(creators)} 位 W2E 博主数据")
         return creators
 
@@ -116,10 +122,10 @@ class W2EPostGenerator:
         weights = []
 
         for creator in creators:
-            posts = creator.get("posts", creator.get("recent_posts", []))
+            posts = creator.get("recent_posts", [])
             if not posts:
                 continue
-            earnings = creator.get("earn_usdc", creator.get("earnings_usdc", 1.0))
+            earnings = creator.get("earnings_usdc", 1.0)
             for post in posts:
                 text = post.get("text", "").strip()
                 # 过滤过短或无实质内容的帖子
@@ -135,107 +141,25 @@ class W2EPostGenerator:
 
         selected = random.choices(candidates, weights=weights, k=1)[0]
         creator_name = selected["creator"]["nickname"]
-        earnings = selected["creator"].get("earn_usdc", selected["creator"].get("earnings_usdc", 0))
+        earnings = selected["creator"]["earnings_usdc"]
         post_preview = selected["post"]["text"][:60]
         logger.info(f"选取参考帖子: [{creator_name} | 收益 {earnings:.0f} USDC] {post_preview}...")
         return selected
 
     # ── LLM 改写 ──────────────────────────────────────────────────────────────
 
-    def _resolve_futures_symbol(self, coin: str) -> str:
-        """将代币符号映射为期货合约符号。"""
-        normalized = coin.upper().strip()
-        if normalized.endswith("USDT") and len(normalized) > 4:
-            return normalized
-        return FUTURES_MAP.get(normalized, f"{normalized}USDT")
-
-    def _next_cta(self, coin: str, futures: str | None = None) -> str:
-        """保留接口兼容性；真实广场风格下默认不额外拼接 CTA。"""
+    def _next_cta(self, coin: str) -> str:
+        """轮换 CTA 模板。"""
         cta = W2E_CTA_POOL[self._cta_index % len(W2E_CTA_POOL)]
         self._cta_index += 1
-        return cta
-
-    def _normalize_base_cashtags(self, body: str, coin: str, futures: str) -> str:
-        """将正文中的期货 cashtag 统一回基础币 cashtag，真正的合约绑定交给 futures marker。"""
-        def replace_token(match: re.Match) -> str:
-            token = match.group(0)
-            symbol = token[1:].upper()
-            if symbol.startswith(futures.upper()):
-                return f"${coin}"
-            return token
-
-        return re.sub(r"\$[A-Z0-9._-]{2,30}", replace_token, body, flags=re.IGNORECASE)
-
-    def _ensure_base_first_cashtag(self, body: str, coin: str) -> str:
-        """确保正文中首个 cashtag 为基础币符号。"""
-        matches = list(re.finditer(r"\$[A-Z0-9]{2,20}", body.upper()))
-        if not matches:
-            return f"${coin} " + body
-        first = matches[0].group(0)
-        if first == f"${coin}":
-            return body
-        start, end = matches[0].span()
-        return body[:start] + f"${coin}" + body[end:]
-
-    def _strip_footer_artifacts(self, body: str, coin: str, futures: str) -> str:
-        """移除脚本味很重的尾部 artifacts：裸 future marker 和模板化 hashtag 行。"""
-        lines = [line.rstrip() for line in body.splitlines()]
-        cleaned: list[str] = []
-        for line in lines:
-            stripped = line.strip()
-            if not stripped:
-                cleaned.append("")
-                continue
-            if re.fullmatch(r"\{future\}\([A-Z0-9]+\)", stripped, re.IGNORECASE):
-                continue
-            if stripped.startswith("#"):
-                tags = re.findall(r"#[^\s#]+", stripped)
-                normalized_tags = {tag.upper() for tag in tags}
-                template_tags = {
-                    f"#{coin}",
-                    "#币安广场",
-                    "#内容挖矿",
-                    "#加密货币",
-                    "#合约交易",
-                    f"#{futures}",
-                }
-                if normalized_tags and normalized_tags.issubset(template_tags):
-                    continue
-            cleaned.append(line)
-        normalized = "\n".join(cleaned)
-        normalized = re.sub(r"\n{3,}", "\n\n", normalized)
-        return normalized.strip()
-
-    def _insert_cta_before_footer(self, body: str, cta: str) -> str:
-        """真实广场风格下默认不追加 CTA；若提供非空 CTA，则自然附在末尾。"""
-        body = body.strip()
-        if not cta:
-            return body
-        if not body:
-            return cta.strip()
-        return f"{body}\n\n{cta.strip()}"
-
-    def _normalize_generated_body(self, body: str, coin: str) -> str:
-        """统一规范 LLM 输出：保留自然的基础 cashtag，移除脚本化 futures/hashtag 尾巴。"""
-        coin = coin.upper().strip()
-        futures = self._resolve_futures_symbol(coin)
-        normalized = self._normalize_base_cashtags(body, coin, futures)
-        normalized = self._strip_footer_artifacts(normalized, coin, futures)
-        normalized = self._ensure_base_first_cashtag(normalized, coin)
-        normalized = re.sub(r"\n{3,}", "\n\n", normalized).strip()
-        return normalized
+        return cta.replace("${coin}", f"${coin}")
 
     def _extract_main_coin(self, text: str) -> str:
         """从帖子文本中提取主要提及的代币。"""
-        # 优先提取 $SYMBOL 格式（支持 $W、$1000SATS 等短/数字代币写法）
-        cashtags = re.findall(r"\$([A-Z0-9]{1,15})", text.upper())
+        # 优先提取 $SYMBOL 格式
+        cashtags = re.findall(r"\$([A-Z]{2,10})", text.upper())
         if cashtags:
-            symbol = cashtags[0]
-            if symbol.endswith("USDT") and len(symbol) > 4:
-                base = symbol[:-4]
-                reverse_map = {future: base for base, future in FUTURES_MAP.items() if base.isupper()}
-                return reverse_map.get(symbol, base)
-            return symbol
+            return cashtags[0]
         # 常见代币关键词匹配
         common_coins = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE", "ADA", "AVAX", "MATIC", "DOT"]
         text_upper = text.upper()
@@ -250,15 +174,30 @@ class W2EPostGenerator:
         creator: dict,
         persona: str,
     ) -> str:
-        """构建 LLM 改写 Prompt。"""
+        """构建 LLM 改写 Prompt（含币安期货合约实时价格）。"""
         ref_text = reference_post.get("text", "")
         ref_views = reference_post.get("views", 0)
         ref_likes = reference_post.get("likes", 0)
         creator_name = creator.get("nickname", "")
-        creator_earnings = creator.get("earn_usdc", creator.get("earnings_usdc", 0))
+        creator_earnings = creator.get("earnings_usdc", 0)
         coin = self._extract_main_coin(ref_text)
-        futures = self._resolve_futures_symbol(coin)
         banned_str = "、".join(BANNED_PHRASES[:6])
+
+        # ── 期货合约实时价格同步 ──
+        price_line = ""
+        try:
+            from utils.price_sync import get_futures_price
+            fp = get_futures_price(coin)
+            if fp:
+                price_line = (
+                    f"\n币安期货实时行情（必须使用这些真实数据，不能编造）："
+                    f"\n- {coin} 当前期货价格: ${fp['price']:,.4f}"
+                    f"\n- 24h涨跌幅: {fp['change_24h']:+.2f}%"
+                    f"\n- 24h最高: ${fp['high_24h']:,.4f}，最低: ${fp['low_24h']:,.4f}"
+                )
+                logger.info(f"[W2E生成器] 💹 {coin} 期货实时价格已注入: ${fp['price']:,.4f} ({fp['change_24h']:+.2f}%)")
+        except Exception as e:
+            logger.warning(f"[W2E生成器] 价格同步失败: {e}")
 
         return f"""你是一位币安广场内容创作者，正在参与内容挖矿（Write to Earn）活动。
 
@@ -271,23 +210,22 @@ class W2EPostGenerator:
 - 原作者：{creator_name}（上周内容挖矿收益：{creator_earnings:.0f} USDC）
 - 原帖数据：{ref_views:,} 次浏览，{ref_likes} 个点赞
 - 原帖内容：
-{ref_text}
+{ref_text}{price_line}
 
 改写要求（严格遵守，违反任何一条则重写）：
 1. 字数 {POST_MIN_CHARS}~{POST_MAX_CHARS} 字（不含标签行和 CTA）
-2. 必须完全原创，不能抄袭原帖，要用自己的语言和视角重新表达
+2. 必须完全原创，不能抄袍原帖，要用自己的语言和视角重新表达
 3. 保留原帖的核心观点或市场信息，但角度、结构、措辞必须不同
 4. 第一句必须是强力 Hook，让人忍不住继续读（可以是反问、惊人数据、或争议性观点）
-5. 正文中必须包含至少一个具体数字（价格、涨跌幅、时间等）
-6. 结尾必须是一个引导互动的问句（如"你怎么看？"、"你上车了吗？"）
+5. 正文中必须包含至少一个具体数字（价格、涨跌幅、时间等），如果有上面的实时行情数据则优先使用
+6. 结尾必须是一个引导互动的问句（如“你怎么看？”、“你上车了吗？”）
 7. 语气口语化、像真人说话，绝对禁止使用：{banned_str}
 8. 禁止任何八股文结构（首先/其次/综上等）
-9. 正文中自然包含 1~3 个 ${coin} cashtag，不要把 ${futures} 写成 cashtag
-10. 观点表达要带出真实合约语境，可以自然使用多空博弈、插针、爆仓、支撑/压力、永续情绪等交易语言，但不要生硬堆砌术语
-11. 不要输出单独的模板化标签行（例如 #币安广场 #内容挖矿 #加密货币 这一整行）
-12. 不要输出裸露的语法标记（例如 {{future}}({futures})）；要像真实广场创作者一样自然发文
+9. 正文中必须包含 ${coin} cashtag，触发内容挖矿手续费返佣
+10. 最后一行必须是标签：#{coin} #币安广场 #内容挖矿 #加密货币
+11. 结尾加上免责声明：⚠️免责声明：\n本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 $BTC $ETH $BNB
 
-只输出改写后的短贴正文，不要输出任何解释、前缀或引号。"""
+只输出改写后的短贴正文（含最后的标签行和免责声明），不要输出任何解释、前缀或引号。"""
 
     def _rewrite_with_llm(self, reference: dict) -> tuple[str, str]:
         """
@@ -298,7 +236,6 @@ class W2EPostGenerator:
         post    = reference["post"]
         persona = self._load_persona()
         coin    = self._extract_main_coin(post.get("text", ""))
-        futures = self._resolve_futures_symbol(coin)
 
         prompt = self._build_rewrite_prompt(post, creator, persona)
 
@@ -310,7 +247,6 @@ class W2EPostGenerator:
                 max_tokens=600,
             )
             body = response.choices[0].message.content.strip()
-            body = self._normalize_generated_body(body, coin)
             logger.info(f"LLM 改写成功，字数: {len(body)}")
             return body, coin
         except Exception as e:
@@ -354,15 +290,14 @@ class W2EPostGenerator:
         body, coin = self._rewrite_with_llm(reference)
         if not body:
             return {"success": False, "reason": "llm_failed"}
-        futures = self._resolve_futures_symbol(coin)
 
         # Step 4: 拼接 CTA
-        cta = self._next_cta(coin, futures)
-        full_content = self._insert_cta_before_footer(body, cta)
+        cta = self._next_cta(coin)
+        full_content = f"{body}\n\n{cta}"
 
         # Step 5: 打印预览
         creator_name = reference["creator"]["nickname"]
-        earnings = reference["creator"].get("earn_usdc", reference["creator"].get("earnings_usdc", 0))
+        earnings = reference["creator"]["earnings_usdc"]
         print(f"\n{'─'*55}")
         print(f"[W2E生成器] 参考博主: {creator_name} (收益 {earnings:.0f} USDC)")
         print(f"[W2E生成器] 改写内容预览:")
@@ -375,7 +310,7 @@ class W2EPostGenerator:
 
         if result["success"]:
             # 更新配额（使用虚拟 coin_info）
-            coin_info = {"coin": coin, "tier": "W2E", "futures": futures}
+            coin_info = {"coin": coin, "tier": "W2E", "futures": f"{coin}USDT"}
             quota.record_post(coin)
             logger.info(f"✅ 发帖成功 | {coin} | {result.get('url', '')}")
             logger.info(f"📊 今日进度: {self.state['daily_count']}/{DAILY_LIMIT}")

@@ -172,6 +172,22 @@ class ContentGenerator:
         banned_str = "、".join(BANNED_PHRASES[:8])
         context_str = "\n".join(context_lines) if context_lines else "（暂无额外上下文）"
 
+        # ── 期货合约实时价格同步（热点模式）──
+        price_line = ""
+        mark_px = coin_info.get("mark_px", 0)
+        change_24h = coin_info.get("change_24h", 0)
+        high_24h = coin_info.get("high_24h", 0)
+        low_24h = coin_info.get("low_24h", 0)
+        if mark_px:
+            price_line = (
+                f"\n币安期货实时行情（必须使用这些真实数据，不能编造）："
+                f"\n- {coin} 当前期货价格: ${mark_px:,.4f}"
+                f"\n- 24h涨跌幅: {change_24h:+.2f}%"
+            )
+            if high_24h and low_24h:
+                price_line += f"\n- 24h最高: ${high_24h:,.4f}，最低: ${low_24h:,.4f}"
+
+
         return f"""你的人设背景：
 {persona}
 
@@ -181,8 +197,7 @@ class ContentGenerator:
 - 目标代币：{coin}（期货合约：{futures}）
 - 热点等级：{tier_desc.get(tier, '热点')}
 - 当前市场上下文：
-{context_str}
-
+{context_str}{price_line}
 写作风格：{style['name']}
 风格说明：{style['desc']}
 开头参考（可改写，不要照抄）：{hook_hint}
@@ -190,13 +205,13 @@ class ContentGenerator:
 严格要求（违反任何一条则重写）：
 1. 正文字数 {POST_MIN_CHARS}~{POST_MAX_CHARS} 字（不含标签行和CTA）
 2. 第一句话必须是强力 Hook，让人忍不住继续读
-3. 正文中必须包含至少一个具体数字（价格、涨跌幅、时间等）
+3. 正文中必须包含至少一个具体数字（价格、涨跌幅、时间等），如果有上面的实时行情数据则优先使用
 4. 结尾必须是一个引导互动的问句（如"你怎么看？"、"你上车了吗？"）
 5. 语气口语化、像真人说话，绝对禁止使用：{banned_str}
 6. 禁止任何八股文结构（首先/其次/综上等）
-7. 最后一行必须是标签：#{coin} #{futures} #币安广场 #合约交易
-
-只输出短贴正文（含最后的标签行），不要输出任何解释、前缀或引号。"""
+7. 最后一行必须是标签：#加密货币 #合约分析 #山寨币观察 #交易策略分享
+8. 结尾加上免责声明：⚠️免责声明：\n本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 ${coin} $BTC $ETH $BNB
+只输出短贴正文（含最后的标签行和免责声明），不要输出任何解释、前缀或引号。"""
 
     def generate(self, coin_info: dict, context: dict) -> str:
         """
