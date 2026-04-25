@@ -67,11 +67,7 @@ BANNED_PHRASES = [
 
 # CTA 池（内容挖矿引导）
 W2E_CTA_POOL = [
-    "💡 点击上方 ${coin} 标签查看实时行情，广场内交易还能给我贡献一点挖矿收益😄",
-    "📊 感兴趣的话点击 ${coin} 看看实时价格，广场内容挖矿进行中！",
-    "🎯 广场内容挖矿进行中——点击 ${coin} 标签参与交易，我们一起在链上留下痕迹！",
-    "🔥 点击 ${coin} 标签直接在广场交易，手续费的一部分会变成我的创作收益，感谢支持！",
-    "👇 点击 ${coin} 查看实时K线，广场交易即挖矿，一起赚！",
+    "💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄",
 ]
 
 
@@ -111,6 +107,85 @@ class W2EPostGenerator:
         return "加密货币内容创作者，专注市场分析，风格直接犀利，有自己的独到见解。"
 
     # ── 素材选取 ──────────────────────────────────────────────────────────────
+
+    def _get_tg_hot_coins(self) -> list[dict]:
+        """
+        从 TG 频道获取热点币种信号列表。
+        返回格式：[{"coin": "BTC", "type": "OI_SURGE", "oi_change": 14.4, "price_change": 14.6, "source": "bwe_oi"}, ...]
+        """
+        try:
+            from smart_money.telegram_scanner import TelegramChannelScanner
+            scanner = TelegramChannelScanner()
+            signals = scanner.scan_all_channels()
+            logger.info(f"[W2E-TG] 获取到 {len(signals)} 个 TG 信号")
+            return signals
+        except Exception as e:
+            logger.warning(f"[W2E-TG] TG 信号获取失败，使用普通选帖: {e}")
+            return []
+
+    def _select_reference_post_with_tg(
+        self, creators: list[dict], tg_signals: list[dict]
+    ) -> tuple[dict | None, dict | None]:
+        """
+        方案B：优先选择 TG 热点币种的 KOL 帖子。
+        若无匹配则降级为普通加权随机选取。
+        返回 (reference_post_dict, matched_tg_signal_or_None)
+        """
+        # 构建 TG 热点币种集合（大写）
+        tg_coin_map = {}
+        for sig in tg_signals:
+            coin = sig.get("coin", "").upper()
+            if coin:
+                # 保留优先级最高（数值最小）的信号
+                if coin not in tg_coin_map or sig.get("priority", 99) < tg_coin_map[coin].get("priority", 99):
+                    tg_coin_map[coin] = sig
+
+        if tg_coin_map:
+            logger.info(f"[W2E-TG] TG 热点币种: {list(tg_coin_map.keys())}")
+
+        # 先尝试找 TG 热点币种的 KOL 帖子
+        matched_candidates = []
+        matched_weights = []
+        all_candidates = []
+        all_weights = []
+
+        for creator in creators:
+            posts = creator.get("recent_posts", [])
+            if not posts:
+                continue
+            earnings = creator.get("earnings_usdc", 1.0)
+            for post in posts:
+                text = post.get("text", "").strip()
+                if len(text) < 30:
+                    continue
+                item = {"creator": creator, "post": post}
+                all_candidates.append(item)
+                all_weights.append(earnings)
+                # 检查是否与 TG 热点币种匹配
+                post_coin = self._extract_main_coin(text).upper()
+                if post_coin in tg_coin_map:
+                    matched_candidates.append((item, tg_coin_map[post_coin]))
+                    matched_weights.append(earnings * 3)  # 匹配帖子权重 ×3
+
+        if matched_candidates:
+            # 有匹配：从匹配帖子中加权随机选取
+            idx = random.choices(range(len(matched_candidates)), weights=matched_weights, k=1)[0]
+            selected_item, matched_signal = matched_candidates[idx]
+            creator_name = selected_item["creator"]["nickname"]
+            coin = self._extract_main_coin(selected_item["post"]["text"])
+            logger.info(f"[W2E-TG] ✅ TG共振匹配！币种: {coin} | 博主: {creator_name} | 信号: {matched_signal.get('type')}")
+            return selected_item, matched_signal
+        else:
+            # 无匹配：降级为普通加权随机
+            if not all_candidates:
+                logger.warning("没有可用的参考帖子")
+                return None, None
+            selected = random.choices(all_candidates, weights=all_weights, k=1)[0]
+            creator_name = selected["creator"]["nickname"]
+            earnings = selected["creator"]["earnings_usdc"]
+            post_preview = selected["post"]["text"][:60]
+            logger.info(f"[W2E-TG] 无TG匹配，普通选帖: [{creator_name} | 收益 {earnings:.0f} USDC] {post_preview}...")
+            return selected, None
 
     def _select_reference_post(self, creators: list[dict]) -> dict | None:
         """
@@ -155,17 +230,32 @@ class W2EPostGenerator:
         return cta.replace("${coin}", f"${coin}")
 
     def _extract_main_coin(self, text: str) -> str:
-        """从帖子文本中提取主要提及的代币。"""
-        # 优先提取 $SYMBOL 格式
+        """从帖子文本中提取主要提及的代币（改进版：频率统计 + 扩展列表）。"""
+        # 优先提取 $SYMBOL 格式（取出现次数最多的）
+        known_non_coins = {"USD", "USDT", "USDC", "BUSD", "COIN", "TOKEN"}
         cashtags = re.findall(r"\$([A-Z]{2,10})", text.upper())
-        if cashtags:
-            return cashtags[0]
-        # 常见代币关键词匹配
-        common_coins = ["BTC", "ETH", "BNB", "SOL", "XRP", "DOGE", "ADA", "AVAX", "MATIC", "DOT"]
+        valid_tags = [t for t in cashtags if t not in known_non_coins]
+        if valid_tags:
+            # 返回出现次数最多的代币
+            from collections import Counter
+            return Counter(valid_tags).most_common(1)[0][0]
+        # 扩展常见代币关键词匹配（按出现频率统计，取最多的）
+        common_coins = [
+            "BTC", "ETH", "BNB", "SOL", "XRP", "DOGE", "ADA", "AVAX",
+            "MATIC", "DOT", "LINK", "UNI", "ATOM", "LTC", "BCH", "NEAR",
+            "APT", "ARB", "OP", "SUI", "TON", "TRUMP", "PEPE", "WIF",
+            "BONK", "NOT", "HYPE", "BSB", "TRADOOR", "AUCTION", "MAVIA",
+            "ORCA", "HYPER", "MOVR", "W",
+        ]
         text_upper = text.upper()
+        # 统计每个代币出现次数，返回出现最多的
+        counts = {}
         for coin in common_coins:
-            if coin in text_upper:
-                return coin
+            matches = re.findall(r"\b" + coin + r"\b", text_upper)
+            if matches:
+                counts[coin] = len(matches)
+        if counts:
+            return max(counts, key=counts.get)
         return "BTC"  # 默认
 
     def _build_rewrite_prompt(
@@ -173,8 +263,9 @@ class W2EPostGenerator:
         reference_post: dict,
         creator: dict,
         persona: str,
+        tg_signal: dict | None = None,
     ) -> str:
-        """构建 LLM 改写 Prompt（含币安期货合约实时价格）。"""
+        """构建 LLM 改写 Prompt（含币安期货合约实时价格 + TG 信号数据）。"""
         ref_text = reference_post.get("text", "")
         ref_views = reference_post.get("views", 0)
         ref_likes = reference_post.get("likes", 0)
@@ -199,6 +290,41 @@ class W2EPostGenerator:
         except Exception as e:
             logger.warning(f"[W2E生成器] 价格同步失败: {e}")
 
+        # ── TG 信号数据注入（方案A）──
+        tg_line = ""
+        if tg_signal:
+            sig_type = tg_signal.get("type", "")
+            sig_source = tg_signal.get("source", "")
+            sig_data = tg_signal.get("data", {})
+            if sig_type in ("OI_SURGE", "OI_PRICE_SURGE"):
+                oi_chg = sig_data.get("oi_change_pct", 0)
+                px_chg = sig_data.get("price_change_pct", 0)
+                oi_val = sig_data.get("oi_value", 0)
+                tg_line = (
+                    f"\n链上实时信号（来自 TG 监控频道，必须融入帖子内容）："
+                    f"\n- 信号类型: 合约持仓量(OI)异动"
+                    f"\n- {coin} OI 变化: +{oi_chg:.1f}%，价格变化: {px_chg:+.1f}%"
+                    + (f"\n- 当前 OI 规模: ${oi_val/1e6:.1f}M" if oi_val else "")
+                )
+            elif sig_type in ("WHALE_LONG", "WHALE_SHORT", "WHALE_CLOSE"):
+                direction = "做多" if "LONG" in sig_type else ("做空" if "SHORT" in sig_type else "平仓")
+                size = sig_data.get("position_size_usd", 0)
+                win_rate = sig_data.get("win_rate", 0)
+                tg_line = (
+                    f"\n链上实时信号（来自 TG 监控频道，必须融入帖子内容）："
+                    f"\n- 信号类型: 巨鲸{direction}信号"
+                    + (f"\n- 持仓规模: ${size/1e6:.1f}M" if size else "")
+                    + (f"\n- 历史胜率: {win_rate:.0f}%" if win_rate else "")
+                )
+            elif sig_type == "TG_COMBINED":
+                tg_line = (
+                    f"\n链上实时信号（来自 TG 监控频道，必须融入帖子内容）："
+                    f"\n- 信号类型: 多源共振（Hyperliquid巨鲸 + 币安OI同步异动）"
+                    f"\n- 这是最强烈的买入/卖出信号，请在帖子中强调多源确认的重要性"
+                )
+            if tg_line:
+                logger.info(f"[W2E-TG] 📡 TG信号数据已注入: {coin} {sig_type}")
+
         return f"""你是一位币安广场内容创作者，正在参与内容挖矿（Write to Earn）活动。
 
 你的人设背景：
@@ -210,7 +336,7 @@ class W2EPostGenerator:
 - 原作者：{creator_name}（上周内容挖矿收益：{creator_earnings:.0f} USDC）
 - 原帖数据：{ref_views:,} 次浏览，{ref_likes} 个点赞
 - 原帖内容：
-{ref_text}{price_line}
+{ref_text}{price_line}{tg_line}
 
 改写要求（严格遵守，违反任何一条则重写）：
 1. 字数 {POST_MIN_CHARS}~{POST_MAX_CHARS} 字（不含标签行和 CTA）
@@ -223,9 +349,11 @@ class W2EPostGenerator:
 8. 禁止任何八股文结构（首先/其次/综上等）
 9. 正文中必须包含 ${coin} cashtag，触发内容挖矿手续费返佣
 10. 最后一行必须是标签：#{coin} #币安广场 #内容挖矿 #加密货币
-11. 结尾加上免责声明：⚠️免责声明：\n本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 $BTC $ETH $BNB
-
-只输出改写后的短贴正文（含最后的标签行和免责声明），不要输出任何解释、前缀或引号。"""
+11. 结尾加上免责声明和CTA（必须按此格式，不能改动）：
+⚠️免责声明：
+本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 ${coin} $BTC $ETH $BNB
+💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄
+只输出改写后的短贴正文（含最后的标签行、免责声明和CTA），不要输出任何解释、前缀或引号。"""
 
     def _rewrite_with_llm(self, reference: dict) -> tuple[str, str]:
         """
@@ -237,7 +365,7 @@ class W2EPostGenerator:
         persona = self._load_persona()
         coin    = self._extract_main_coin(post.get("text", ""))
 
-        prompt = self._build_rewrite_prompt(post, creator, persona)
+        prompt = self._build_rewrite_prompt(post, creator, persona, tg_signal=reference.get("tg_signal"))
 
         try:
             response = self.client.chat.completions.create(
@@ -281,19 +409,28 @@ class W2EPostGenerator:
                 logger.error(f"爬虫失败: {e}")
                 return {"success": False, "reason": "no_w2e_data"}
 
-        # Step 2: 选取参考帖子
-        reference = self._select_reference_post(creators)
+        # Step 2: 获取 TG 信号并选取参考帖子（TG共振优先）
+        tg_signals = self._get_tg_hot_coins()
+        reference, tg_signal = self._select_reference_post_with_tg(creators, tg_signals)
         if not reference:
             return {"success": False, "reason": "no_reference_post"}
+        # 将 TG 信号附加到 reference 中，供 _rewrite_with_llm 使用
+        reference["tg_signal"] = tg_signal
+
+        # Step 2.5: 提前提取 coin，检查同币种冷却（避免重复发帖）
+        _preview_coin = self._extract_main_coin(reference["post"].get("text", ""))
+        _ok, _reason = quota.can_post(_preview_coin)
+        if not _ok:
+            logger.info(f"[W2E] 跳过 {_preview_coin}: {_reason}")
+            return {"success": False, "reason": f"coin_cooldown:{_preview_coin}"}
 
         # Step 3: LLM 改写
         body, coin = self._rewrite_with_llm(reference)
         if not body:
             return {"success": False, "reason": "llm_failed"}
 
-        # Step 4: 拼接 CTA
-        cta = self._next_cta(coin)
-        full_content = f"{body}\n\n{cta}"
+        # Step 4: CTA 已在 LLM Prompt 中生成，直接使用 body
+        full_content = body
 
         # Step 5: 打印预览
         creator_name = reference["creator"]["nickname"]

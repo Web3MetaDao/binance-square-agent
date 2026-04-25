@@ -63,11 +63,7 @@ STYLE_POOL = [
 # 读者点击 cashtag → 完成交易 → 创作者获得手续费返佣（最高 50%）
 # ──────────────────────────────────────────────
 CTA_POOL = [
-    "💡 点击上方 ${{coin}} 标签查看实时行情，直接在广场交易更方便。",
-    "📊 感兴趣的话点击 ${{coin}} 看看实时价格，广场内交易还能给我贡献一点挖矿收益😄",
-    "🔍 点击帖子里的 ${{coin}} 标签可以直接跳转行情页，欢迎交流讨论！",
-    "⚡ 觉得分析有用的话，点击 ${{coin}} 标签看看行情，你的每一笔交易都是对创作者最好的支持。",
-    "🎯 广场内容挖矿进行中——点击 ${{coin}} 标签参与交易，我们一起在链上留下痕迹！",
+    "💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄",
 ]
 
 # 禁用词（反八股文）
@@ -210,8 +206,11 @@ class ContentGenerator:
 5. 语气口语化、像真人说话，绝对禁止使用：{banned_str}
 6. 禁止任何八股文结构（首先/其次/综上等）
 7. 最后一行必须是标签：#加密货币 #合约分析 #山寨币观察 #交易策略分享
-8. 结尾加上免责声明：⚠️免责声明：\n本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 ${coin} $BTC $ETH $BNB
-只输出短贴正文（含最后的标签行和免责声明），不要输出任何解释、前缀或引号。"""
+8. 结尾加上免责声明和CTA（必须按此格式，不能改动）：
+⚠️免责声明：
+本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 ${coin} $BTC $ETH $BNB
+💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄
+只输出短贴正文（含最后的标签行、免责声明和CTA），不要输出任何解释、前缀或引号。"""
 
     def generate(self, coin_info: dict, context: dict) -> str:
         """
@@ -247,24 +246,32 @@ class ContentGenerator:
         return full_post
 
     def _fallback_template(self, coin_info: dict, style: dict) -> str:
-        """LLM 失败时的降级内容模板。"""
+        """LLM 失败时的降级内容模板（符合币安广场标准格式）。"""
         coin    = coin_info["coin"]
         futures = coin_info["futures"]
         tier    = coin_info["tier"]
         tier_label = {"S": "双端爆热", "A": "KOL密集讨论", "B": "广场热度飙升"}.get(tier, "热点")
+        DISCLAIMER = (
+            "⚠️免责声明：\n"
+            "本文仅为个人行情观点分享，不构成任何投资建议，"
+            "加密货币市场高波动、高风险，请理性交易、自行承担风险。"
+        )
+        CTA_FIXED = "💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄"
         return (
-            f"🚨 ${coin} 正在成为全场最热话题（{tier_label}）！\n"
+            f"${coin} 正在成为全场最热话题（{tier_label}）！\n"
             f"这种信号历史上出现几次都是大行情前兆，"
             f"我看短期内 ${coin} 有机会突破关键压力位。\n"
             f"你现在的仓位准备好了吗？\n\n"
-            f"#{coin} #{futures} #币安广场 #合约交易"
+            f"#加密货币 #合约分析 #山寨币观察 #交易策略分享\n"
+            f"{DISCLAIMER} ${coin} $BTC $ETH $BNB\n"
+            f"{CTA_FIXED}"
         )
 
     def generate_from_smart_money_prompt(
         self,
         coin_info: dict,
         sm_prompt: str,
-        cta: str,
+        cta: str = "",
     ) -> str:
         """
         使用聪明钱专属 Prompt 生成短贴。
@@ -293,11 +300,8 @@ class ContentGenerator:
             print(f"  [内容层-聪明钱] LLM 调用失败，使用降级模板: {e}")
             body = self._sm_fallback_template(coin_info)
 
-        # 检查 body 是否已包含 cta（Prompt 末尾已含 CTA 指令，LLM 可能已输出）
-        if cta.strip() and cta.strip() in body:
-            full_post = body  # CTA 已在 body 中，不重复追加
-        else:
-            full_post = f"{body}\n\n{cta}"
+        # CTA 已内嵌在 Prompt 中，LLM 会自动输出，不再额外追加
+        full_post = body
         return full_post
 
     def _sm_fallback_template(self, coin_info: dict) -> str:
