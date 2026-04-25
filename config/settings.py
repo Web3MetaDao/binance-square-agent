@@ -4,9 +4,36 @@
 所有可调参数集中在此文件，部署时只需修改此处。
 """
 import os
+import pathlib
 
 # ══════════════════════════════════════════════
-# 密钥配置（通过环境变量注入，勿硬编码）
+# 自动加载 .env 文件（支持 python-dotenv，同时兼容无 dotenv 环境）
+# ══════════════════════════════════════════════
+def _load_env_file():
+    """优先使用 python-dotenv，如果未安装则手动解析 .env 文件。"""
+    env_path = pathlib.Path(__file__).parent.parent / ".env"
+    if not env_path.exists():
+        return
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(env_path, override=False)  # 不覆盖已有环境变量
+    except ImportError:
+        # 手动解析 .env（当 python-dotenv 未安装时的兑底方案）
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                key, _, val = line.partition("=")
+                key = key.strip()
+                val = val.strip().strip('"').strip("'")
+                if key and key not in os.environ:  # 不覆盖已有环境变量
+                    os.environ[key] = val
+
+_load_env_file()
+
+# ══════════════════════════════════════════════
+# 密鑰配置（通过环境变量注入，勿硬编码）
 # ══════════════════════════════════════════════
 SQUARE_API_KEY  = os.environ.get("SQUARE_API_KEY", "")
 OPENAI_API_KEY  = os.environ.get("OPENAI_API_KEY", "")
