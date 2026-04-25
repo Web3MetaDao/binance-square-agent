@@ -133,3 +133,23 @@ PERSONA_FILE = DATA_DIR / "persona.md"
 STATE_FILE   = DATA_DIR / "agent_state.json"
 POST_LOG     = LOG_DIR  / "post_log.jsonl"
 MARKET_FILE  = DATA_DIR / "market_context.json"
+
+# ════════════════════════════════════════════
+# Telegram 信号源配置
+# ════════════════════════════════════════════
+# TG 频道列表（公开频道，无需登录，Web 抓取）
+TG_CHANNELS = [
+    "HyperInsight",          # Hyperliquid 链上巨鲸持仓异动
+    "BWE_OI_Price_monitor",  # 币安合约 OI + 价格异动
+]
+
+# TG 信号缓存有效期（秒）
+TG_CACHE_TTL = int(os.environ.get("TG_CACHE_TTL", "600"))  # 默认 10 分钟
+
+# TG 消息最大时效（小时）
+TG_MAX_AGE_HOURS = int(os.environ.get("TG_MAX_AGE_HOURS", "2"))
+
+# TG User API 凭证（可选，用于 MTProto 高级模式）
+TG_API_ID       = os.environ.get("TG_API_ID",       "22370331")
+TG_API_HASH     = os.environ.get("TG_API_HASH",     "ce19c89e0781f6f6e5c5dc0049c1af96")
+TG_SESSION_NAME = os.environ.get("TG_SESSION_NAME", "binance_agent_tg")
