@@ -317,14 +317,25 @@ def run_perception(state: dict) -> dict:
     """
     执行一次完整的双端感知扫描，
     结果写入 market_context.json 并返回。
+    同时触发 Write to Earn 排行榜爬虫（每30分钟刷新一次）。
+    同时融合聪明钱信号（Hyperliquid 大户持仓），增强感知层数据。
     """
     print("\n[感知层] ══ 开始双端热点扫描 ══")
     tw_scanner = TwitterScanner(state)
     sq_scanner = SquareScanner()
 
+    # ── Write to Earn 排行榜爬虫（异步触发，不阻塞主流程）──
+    _maybe_refresh_w2e_leaderboard(state)
+
     tw_result = tw_scanner.scan()
     sq_result = sq_scanner.scan()
     resonance = analyze_resonance(tw_result, sq_result)
+
+    # 加载最新的 W2E 排行榜数据
+    w2e_data = _load_w2e_data()
+
+    # ── 融合聪明钱信号（异步触发，不阻塞主流程）──
+    smart_money_data = _load_smart_money_signals(state)
 
     market_context = {
         "scanned_at":  datetime.now(timezone.utc).isoformat(),
@@ -333,6 +344,8 @@ def run_perception(state: dict) -> dict:
         "hot_posts":   sq_result.get("hot_posts", []),
         "hype_items":  sq_result.get("hype_items", []),
         "topics":      sq_result.get("topics", []),
+        "w2e_top_creators": w2e_data,  # 内容挖矿排行榜前10博主及其帖子
+        "smart_money": smart_money_data,  # 聪明钱信号（Hyperliquid 大户持仓）
     }
 
     DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -344,7 +357,96 @@ def run_perception(state: dict) -> dict:
     for item in resonance[:5]:
         print(f"  [{item['tier']}] {item['coin']:8s} → {item['futures']:12s} 综合热度: {item['score']:.1f}")
 
+    # 打印聪明钱信号摘要
+    if smart_money_data.get("status") == "ok" and smart_money_data.get("top_signals"):
+        print(f"[感知层] 🐋 聪明钱信号: {len(smart_money_data['top_signals'])} 个信号")
+        for sig in smart_money_data["top_signals"][:3]:
+            icon = "🟢" if sig.get("net_direction") == "LONG" else ("🔴" if sig.get("net_direction") == "SHORT" else "⚪")
+            print(f"  {icon} [{sig.get('confidence', '?')}] {sig.get('signal', '')}")
+
     return market_context
+
+
+# ──────────────────────────────────────────────
+# E. Write to Earn 排行榜集成辅助函数
+# ──────────────────────────────────────────────
+
+_W2E_REFRESH_INTERVAL = 30 * 60  # 30分钟（秒）
+_w2e_last_refresh = 0.0
+
+
+def _maybe_refresh_w2e_leaderboard(state: dict):
+    """
+    检查是否需要刷新 W2E 排行榜数据。
+    每30分钟触发一次爬虫，使用独立线程避免阻塞感知层。
+    """
+    import time
+    import threading
+    global _w2e_last_refresh
+
+    now = time.time()
+    if now - _w2e_last_refresh < _W2E_REFRESH_INTERVAL:
+        print(f"[感知层] W2E 排行榜数据未过期，跳过刷新")
+        return
+
+    _w2e_last_refresh = now
+    print("[感知层] 🏆 触发 Write to Earn 排行榜爬虫（后台线程）...")
+
+    def _crawl():
+        try:
+            import sys
+            import os
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+            from write_to_earn_crawler import run_crawler
+            run_crawler()
+        except Exception as e:
+            print(f"[感知层] W2E 爬虫异常: {e}")
+
+    t = threading.Thread(target=_crawl, daemon=True)
+    t.start()
+
+
+def _load_w2e_data() -> dict:
+    """
+    从 data/w2e_top_creators.json 加载排行榜数据。
+    返回精简版数据供内容层参考（仅保留博主名称、收益和帖子文本）。
+    """
+    w2e_file = DATA_DIR / "w2e_top_creators.json"
+    if not w2e_file.exists():
+        return {"status": "no_data", "top_creators": []}
+
+    try:
+        with open(w2e_file, encoding="utf-8") as f:
+            raw = json.load(f)
+
+        # 精简数据，只保留内容层需要的字段
+        creators_summary = []
+        for c in raw.get("top_creators", []):
+            posts_texts = [
+                p.get("text", "")[:200]
+                for p in c.get("recent_posts", [])[:3]
+                if p.get("text")
+            ]
+            creators_summary.append({
+                "rank":         c.get("rank"),
+                "nickname":     c.get("nickname"),
+                "earnings_usdc": c.get("earnings_usdc"),
+                "top_posts":    posts_texts,
+                "top_cashtags": list(set(
+                    tag
+                    for p in c.get("recent_posts", [])
+                    for tag in p.get("cashtags", [])
+                ))[:5],
+            })
+
+        return {
+            "status":       "ok",
+            "crawled_at":   raw.get("crawled_at", ""),
+            "top_creators": creators_summary,
+        }
+    except Exception as e:
+        print(f"[感知层] 加载 W2E 数据失败: {e}")
+        return {"status": "error", "top_creators": []}
 
 
 def load_market_context() -> dict:
@@ -353,3 +455,99 @@ def load_market_context() -> dict:
         with open(MARKET_FILE) as f:
             return json.load(f)
     return {}
+
+
+# ──────────────────────────────────────────────
+# F. 聪明钱信号集成辅助函数
+# ──────────────────────────────────────────────
+
+_SM_REFRESH_INTERVAL = 15 * 60  # 15分钟（秒）
+_sm_last_refresh = 0.0
+
+
+def _load_smart_money_signals(state: dict) -> dict:
+    """
+    加载聪明钱信号数据，并在后台异步刷新（每15分钟一次）。
+    优先使用缓存，避免阻塞主流程。
+    """
+    import threading
+    global _sm_last_refresh
+
+    # 尝试加载缓存信号
+    sm_data = _read_smart_money_cache()
+
+    # 检查是否需要后台刷新
+    now = time.time()
+    if now - _sm_last_refresh >= _SM_REFRESH_INTERVAL:
+        _sm_last_refresh = now
+        print("[感知层] 🐋 触发聪明钱信号扫描（后台线程）...")
+
+        def _scan():
+            try:
+                import sys
+                import os
+                sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+                from smart_money.smart_money_monitor import aggregate_smart_money_signals
+                aggregate_smart_money_signals()
+            except Exception as e:
+                print(f"[感知层] 聪明钱扫描异常: {e}")
+
+        t = threading.Thread(target=_scan, daemon=True)
+        t.start()
+    else:
+        remaining = (_SM_REFRESH_INTERVAL - (now - _sm_last_refresh)) / 60
+        print(f"[感知层] 聪明钱信号未过期，跳过刷新（{remaining:.1f}分钟后刷新）")
+
+    return sm_data
+
+
+def _read_smart_money_cache() -> dict:
+    """
+    读取聪明钱信号缓存文件，返回精简版数据供内容层使用。
+    """
+    sm_cache_file = DATA_DIR / "smart_money_signal.json"
+    if not sm_cache_file.exists():
+        return {"status": "no_data", "top_signals": [], "content_hints": []}
+
+    try:
+        with open(sm_cache_file, encoding="utf-8") as f:
+            raw = json.load(f)
+
+        # 检查数据新鲜度（30分钟内有效）
+        ts_str = raw.get("timestamp", "")
+        if ts_str:
+            from datetime import datetime, timezone
+            ts = datetime.fromisoformat(ts_str)
+            age_min = (datetime.now(timezone.utc) - ts).total_seconds() / 60
+            if age_min > 30:
+                return {"status": "stale", "age_min": round(age_min, 1),
+                        "top_signals": [], "content_hints": []}
+
+        # 精简数据，只保留内容层需要的字段
+        top_signals = []
+        for sig in raw.get("top_signals", [])[:5]:
+            if sig.get("confidence") in ["HIGH", "MEDIUM"]:
+                top_signals.append({
+                    "coin": sig["coin"],
+                    "signal": sig["signal"],
+                    "confidence": sig["confidence"],
+                    "net_direction": sig["net_direction"],
+                    "long_ratio": sig.get("long_ratio", 50),
+                    "whale_count": sig.get("whale_count", 0),
+                    "total_size_usd": sig.get("total_size_usd", 0),
+                    "mark_px": sig.get("mark_px", 0),
+                    "change_24h": sig.get("change_24h", 0),
+                    "funding_rate": sig.get("funding_rate", 0),
+                })
+
+        return {
+            "status": "ok",
+            "scanned_at": raw.get("timestamp", ""),
+            "top_signals": top_signals,
+            "content_hints": raw.get("content_hints", [])[:5],
+            "scan_summary": raw.get("scan_summary", {}),
+        }
+
+    except Exception as e:
+        print(f"[感知层] 加载聪明钱信号失败: {e}")
+        return {"status": "error", "top_signals": [], "content_hints": []}

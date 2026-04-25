@@ -13,10 +13,15 @@ build/
 .env.*
 secrets.py
 
-# 运行时数据（可选择不上传）
+# 运行时数据（由程序自动生成，不上传）
 data/agent_state.json
 data/market_context.json
 data/persona.md
+data/w2e_top_creators.json
+data/leaderboard_cache.json
+data/live_market_report.json
+data/live_script.json
+data/smart_money_signal.json
 logs/
 
 # IDE

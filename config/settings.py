@@ -10,14 +10,29 @@ import os
 # ══════════════════════════════════════════════
 SQUARE_API_KEY  = os.environ.get("SQUARE_API_KEY", "")
 OPENAI_API_KEY  = os.environ.get("OPENAI_API_KEY", "")
-REFERRAL_CODE   = os.environ.get("REFERRAL_CODE", "YOUR_REF_CODE")
-REFERRAL_LINK   = os.environ.get("REFERRAL_LINK",
-    f"https://www.binance.com/zh-CN/join?ref={os.environ.get('REFERRAL_CODE','YOUR_REF_CODE')}")
+
+# ══════════════════════════════════════════════
+# OpenAI 第三方中转站配置
+# 将 OPENAI_BASE_URL 设置为中转站地址，例如：
+#   export OPENAI_BASE_URL="https://your-proxy.example.com/v1"
+# 若不设置则使用官方默认地址
+# ══════════════════════════════════════════════
+OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+
+# ══════════════════════════════════════════════
+# 币安广场内容挖矿（Write to Earn）配置
+# 规则：发帖含 cashtag（如 $BTC）→ 读者点击后交易 → 获得手续费返佣
+# 返佣比例：普通创作者 20%，周榜 Top30 最高 50%
+# 返佣以 USDC 发放，每周四结算，最低 0.1 USDC 起付
+# 帖子有效期：发布后 7 天内带来的交易才计入返佣
+# ══════════════════════════════════════════════
+WRITE_TO_EARN_URL = "https://www.binance.com/zh-CN/square/write-to-earn"
+WRITE_TO_EARN_GUIDE = "https://www.binance.com/zh-CN/academy/articles/write-to-earn-on-binance-square-all-you-need-to-know"
 
 # ══════════════════════════════════════════════
 # 执行层参数
 # ══════════════════════════════════════════════
-DAILY_LIMIT       = 100    # 每日最大发帖数
+DAILY_LIMIT       = 72     # 每日最大发帖数（W2E 48篇 + 热点 24篇）
 MIN_INTERVAL_MIN  = 14     # 两贴之间最短间隔（分钟）
 COIN_COOLDOWN_H   = 4      # 同一币种最短间隔（小时）
 SCAN_INTERVAL_M   = 30     # 感知层扫描间隔（分钟）
@@ -26,7 +41,7 @@ MAX_JITTER_MIN    = 3      # 发帖间隔随机抖动上限（分钟）
 # ══════════════════════════════════════════════
 # LLM 配置
 # ══════════════════════════════════════════════
-LLM_MODEL         = "gpt-4.1-mini"
+LLM_MODEL         = os.environ.get("LLM_MODEL", "gpt-4.1-mini")
 LLM_TEMPERATURE   = 0.85
 LLM_MAX_TOKENS    = 500
 POST_MIN_CHARS    = 80     # 短贴最小字数

@@ -137,8 +137,7 @@ def test_signal_to_content():
         for sig in signals[:2]:
             content = build_content_prompt(
                 sig,
-                referral_link="https://www.binance.com/referral/test123",
-                cta_index=0
+                                cta_index=0
             )
             print(f"\n  信号类型: {content['signal_type']}")
             print(f"  代币: {content['coin']}")
@@ -164,7 +163,7 @@ def test_signal_to_content():
             },
             "priority": 1,
         }
-        content = build_content_prompt(test_signal, referral_link="https://www.binance.com/referral/test123")
+        content = build_content_prompt(test_signal)
         print(f"✅ 使用测试信号生成 Prompt 成功")
         print(f"  期货标签: {content['futures_tags']}")
         print(f"  Prompt 长度: {len(content['prompt'])} 字符")

@@ -19,7 +19,7 @@ from datetime import datetime
 from openai import OpenAI
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from config.settings import PERSONA_FILE, DATA_DIR, LLM_MODEL
+from config.settings import PERSONA_FILE, DATA_DIR, LLM_MODEL, OPENAI_API_KEY, OPENAI_BASE_URL
 
 # ──────────────────────────────────────────────
 # 100 问访谈题库
@@ -146,7 +146,10 @@ class PersonaBuilder:
     """
 
     def __init__(self):
-        self.client = OpenAI()
+        self.client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            base_url=OPENAI_BASE_URL,
+        )
         self.answers = {}
 
     def run_interview(self, quick_mode: bool = False):

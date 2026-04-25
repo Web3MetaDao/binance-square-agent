@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 数字人直播模块 — 直播小车管理器
-功能：自动挂载直播小车（商品橱窗/返佣链接），根据当前热点自动切换推荐商品
+功能：自动挂载直播小车（内容挖矿引导），根据当前热点自动切换推荐内容
 """
 import os
 import json
@@ -9,19 +9,18 @@ import time
 from datetime import datetime
 from typing import Optional
 
-REFERRAL_CODE = os.getenv("REFERRAL_CODE", "YOUR_REF_CODE")
-REFERRAL_LINK = os.getenv("REFERRAL_LINK", f"https://www.binance.com/zh-CN/join?ref={REFERRAL_CODE}")
+WRITE_TO_EARN_URL = "https://www.binance.com/zh-CN/square/write-to-earn"
 
 # ── 小车商品库（可扩展）────────────────────────────────────
 # 每个商品对应一个推广场景
 CART_PRODUCTS = [
     {
-        "id": "binance_register",
-        "name": "币安注册返佣（最高20%）",
-        "type": "referral",
-        "link": REFERRAL_LINK,
-        "trigger_keywords": ["注册", "开户", "返佣", "手续费"],
-        "push_script": f"老铁们！点击小车第一个商品，通过我的链接注册币安，享最高20%手续费返佣，每天省钱！",
+        "id": "write_to_earn",
+        "name": "币安广场内容挖矿（Write to Earn）",
+        "type": "earn",
+        "link": WRITE_TO_EARN_URL,
+        "trigger_keywords": ["内容挖矿", "写作赚钱", "广场收益", "cashtag", "返佣", "怎么赚"],
+        "push_script": "老铁们！点击帖子里的 $BTC、$ETH 等 cashtag 标签参与交易，就能给创作者贡献挖矿收益，创作者最高可获得50%手续费分成！",
         "priority": 1,
     },
     {
@@ -46,7 +45,7 @@ CART_PRODUCTS = [
         "id": "spot_trading",
         "name": "币安现货交易（零手续费活动）",
         "type": "promotion",
-        "link": f"https://www.binance.com/zh-CN/trade/BTC_USDT?ref={REFERRAL_CODE}",
+        "link": "https://www.binance.com/zh-CN/trade/BTC_USDT",
         "trigger_keywords": ["现货", "买币", "购买"],
         "push_script": "现货交易的老铁，小车里有零手续费活动链接，现在进场划算！",
         "priority": 4,
@@ -65,7 +64,7 @@ class CartManager:
 
     def get_active_cart(self) -> list:
         """获取当前激活的小车商品列表"""
-        # 默认挂载返佣链接（最高优先级）
+        # 默认挂载内容挖矿引导（最高优先级）
         return CART_PRODUCTS
 
     def should_push_cart(self) -> bool:
@@ -76,7 +75,7 @@ class CartManager:
     def get_push_script(self, context_keywords: list = None) -> str:
         """根据当前直播内容选择最匹配的小车推送话术"""
         if not context_keywords:
-            # 默认推返佣
+            # 默认推内容挖矿引导
             return CART_PRODUCTS[0]["push_script"]
 
         # 根据关键词匹配最相关的商品
@@ -122,7 +121,7 @@ class CartManager:
 def generate_cart_config(trending_coins: list) -> dict:
     """根据热点代币动态生成小车配置"""
     config = {
-        "base_items": [CART_PRODUCTS[0]],  # 返佣链接始终挂载
+        "base_items": [CART_PRODUCTS[0]],  # 内容挖矿引导始终挂载
         "trending_items": [],
         "generated_at": datetime.now().isoformat(),
     }
@@ -135,7 +134,7 @@ def generate_cart_config(trending_coins: list) -> dict:
                 "id": f"{symbol.lower()}_futures",
                 "name": f"{symbol} 合约交易",
                 "type": "futures",
-                "link": f"https://www.binance.com/zh-CN/futures/{symbol}USDT?ref={REFERRAL_CODE}",
+                "link": f"https://www.binance.com/zh-CN/futures/{symbol}USDT",
                 "push_script": f"热点来了！{symbol}合约在小车里，点击直达，注意风控！",
                 "priority": 2,
             })

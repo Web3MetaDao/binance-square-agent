@@ -34,7 +34,7 @@ print("═" * 60)
 # ── T1: 模块导入 ──────────────────────────────────────────
 print("\n[T1] 模块导入与配置检查")
 def t1():
-    assert DAILY_LIMIT == 100
+    assert DAILY_LIMIT == 72
     assert len(KOL_LIST) >= 7
     assert len(FUTURES_MAP) >= 30
     print(f"     每日上限:{DAILY_LIMIT} | KOL:{len(KOL_LIST)}位 | 代币映射:{len(FUTURES_MAP)}个")
@@ -98,7 +98,7 @@ def t4():
 test("四重配额控制逻辑", t4)
 
 # ── T5: 内容生成 ──────────────────────────────────────────
-print("\n[T5] LLM内容生成（含期货标签+CTA）")
+print("\n[T5] LLM内容生成（真实广场自然格式）")
 def t5():
     ctx = load_market_context()
     if not ctx.get("resonance"):
@@ -113,13 +113,14 @@ def t5():
     post = gen.generate(coin_info, context)
     coin = coin_info["coin"]
     futures = coin_info["futures"]
-    assert f"#{futures}" in post, f"缺少期货标签 #{futures}"
-    assert "binance.com" in post.lower() or "ref" in post.lower(), "缺少返佣CTA"
-    assert f"#{coin}" in post, f"缺少代币标签 #{coin}"
+    assert f"${coin}" in post, f"缺少基础 cashtag ${coin}"
+    assert f"${futures}" not in post, f"不应出现期货 cashtag ${futures}"
+    assert f"{{future}}({futures})" not in post, "不应出现裸露 future marker"
+    assert "#币安广场 #内容挖矿" not in post, "不应出现模板化挖矿标签尾行"
     char_count = len(post)
-    print(f"     代币:{coin} | 期货标签✅ | CTA✅ | 代币标签✅ | 字数:{char_count}")
+    print(f"     代币:{coin} | 基础cashtag✅ | 自然格式✅ | 字数:{char_count}")
     print(f"     预览: {post[:100]}...")
-test("LLM短贴生成（三要素验证）", t5)
+test("LLM短贴生成（自然格式验证）", t5)
 
 # ── T6: 发帖API ──────────────────────────────────────────
 print("\n[T6] 发帖API连通性")

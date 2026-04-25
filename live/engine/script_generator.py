@@ -11,8 +11,9 @@ from typing import Optional
 from openai import OpenAI
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-REFERRAL_LINK  = os.getenv("REFERRAL_LINK", f"https://www.binance.com/zh-CN/join?ref={os.getenv('REFERRAL_CODE', 'YOUR_REF_CODE')}")
-LLM_MODEL      = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+WRITE_TO_EARN_URL = "https://www.binance.com/zh-CN/square/write-to-earn"
+LLM_MODEL      = os.getenv("LLM_MODEL", "gpt-5.5")
 
 # 话术类型
 SCRIPT_TYPES = {
@@ -20,7 +21,7 @@ SCRIPT_TYPES = {
     "overview":   "大盘行情分析（60秒，BTC+ETH走势，市场情绪）",
     "major":      "主流币分析（每个币30秒，价格+信号+操作建议）",
     "trending":   "热点币推荐（每个币20秒，热度原因+期货合约+风险提示）",
-    "cart_push":  "小车引导（20秒，引导点击商品橱窗/返佣链接）",
+    "cart_push":  "内容挖矿引导（20秒，引导读者点击 cashtag 参与交易，触发内容挖矿返佣）",
     "closing":    "结束语（20秒，总结+关注+下播预告）",
 }
 
@@ -50,7 +51,10 @@ def generate_opening(market_report: dict) -> str:
 
     if OPENAI_API_KEY:
         try:
-            client = OpenAI()
+            client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                base_url=OPENAI_BASE_URL,
+            )
             resp = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=[{
@@ -64,7 +68,7 @@ def generate_opening(market_report: dict) -> str:
 - 热情欢迎观众
 - 提到今天的市场状态
 - 预告今天要分析的内容（大盘、主流币、热点币）
-- 提到直播间有返佣福利
+- 提到广场内容挖矿：点击帖子里的 cashtag 参与交易，支持创作者
 - 口语化，自然流畅，100字以内"""
                 }],
                 max_tokens=200,
@@ -79,7 +83,7 @@ def generate_opening(market_report: dict) -> str:
         f"老铁们好！欢迎来到今天的直播间！"
         f"现在BTC报价{_format_price(btc_price)}，市场整体{trend}，情绪{sentiment}。"
         f"今天我们要分析大盘走势、主流币机会，还有几个热点币值得重点关注！"
-        f"直播间有专属返佣福利，记得点击下方小车！我们开始！"
+        f"点击帖子里的 cashtag 参与交易，支持内容挖矿！我们开始！"
     )
 
 
@@ -96,7 +100,10 @@ def generate_market_overview_script(market_report: dict) -> str:
 
     if OPENAI_API_KEY:
         try:
-            client = OpenAI()
+            client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                base_url=OPENAI_BASE_URL,
+            )
             resp = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=[{
@@ -145,7 +152,10 @@ def generate_major_coin_script(coin_data: dict) -> str:
 
     if OPENAI_API_KEY:
         try:
-            client = OpenAI()
+            client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                base_url=OPENAI_BASE_URL,
+            )
             resp = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=[{
@@ -196,7 +206,10 @@ def generate_trending_recommendation_script(trending_coins: list) -> str:
 
     if OPENAI_API_KEY:
         try:
-            client = OpenAI()
+            client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                base_url=OPENAI_BASE_URL,
+            )
             resp = client.chat.completions.create(
                 model=LLM_MODEL,
                 messages=[{
@@ -231,11 +244,11 @@ def generate_trending_recommendation_script(trending_coins: list) -> str:
 
 
 def generate_cart_push_script(cart_items: list) -> str:
-    """生成小车引导话术（商品橱窗/返佣链接）"""
+    """生成内容挖矿引导话术（引导读者点击 cashtag 交易）"""
     if not cart_items:
         return (
-            f"老铁们！直播间下方有我的专属返佣链接，"
-            f"通过链接注册币安可以享受最高20%手续费返佣，"
+            f"老铁们！点击帖子里的 $BTC、$ETH 等 cashtag 标签，"
+            f"直接跳转行情页参与交易，你的每一笔交易都是对创作者最好的支持！"
             f"每笔交易都省钱！现在点击小车就能看到，不要错过！"
         )
 
@@ -243,7 +256,7 @@ def generate_cart_push_script(cart_items: list) -> str:
     items_desc = "、".join([item.get("name", "") for item in cart_items[:3]])
     return (
         f"老铁们注意！直播间小车里有{items_desc}，"
-        f"还有我的专属返佣链接，注册享最高20%返佣！"
+        f"点击帖子里的 cashtag 参与交易，广场内容挖矿最高返佣50%！"
         f"点击下方小车，现在就能领取福利！"
     )
 

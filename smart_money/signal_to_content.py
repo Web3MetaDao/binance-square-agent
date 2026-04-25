@@ -6,7 +6,7 @@
 核心逻辑：
 1. 读取聪明钱信号（smart_money_signal.json）
 2. 识别最强信号（HIGH confidence）
-3. 生成对应的短贴 Prompt，注入期货合约标签和返佣 CTA
+3. 生成对应的短贴 Prompt，注入期货合约标签和内容挖矿 cashtag
 4. 输出给内容层（content.py）使用
 """
 
@@ -132,13 +132,14 @@ PROMPT_TEMPLATES = {
 """,
 }
 
-# 返佣 CTA 模板（随机轮换）
+# 内容挖矿 CTA 模板（Write to Earn，随机轮换）
+# 核心：引导读者点击 cashtag（$BTC 等）后交易，触发内容挖矿返佣
 CTA_TEMPLATES = [
-    "\n\n👉 看好这波行情？点击下方链接开通币安合约，享高达20%手续费返佣 → {referral_link}",
-    "\n\n💰 想跟单这波机会？用我的专属链接注册币安，手续费立减20% → {referral_link}",
-    "\n\n🔥 这波行情来了！点击链接开通合约账户，新用户专属返佣福利 → {referral_link}",
-    "\n\n⚡ 机会稍纵即逝！点击下方链接，用我的邀请码开通合约，享专属返佣 → {referral_link}",
-    "\n\n📈 跟着聪明钱走！注册币安合约，我的专属邀请码帮你省手续费 → {referral_link}",
+    "\n\n💡 点击上方 ${cashtag} 标签查看实时行情，直接在广场交易更方便。",
+    "\n\n📊 感兴趣的话点击 ${cashtag} 看看实时价格，广场内交易还能给我贡献一点挖矿收益😄",
+    "\n\n🔍 点击帖子里的 ${cashtag} 标签可以直接跳转行情页，欢迎交流讨论！",
+    "\n\n⚡ 觉得分析有用的话，点击 ${cashtag} 标签看看行情，你的每一笔交易都是对创作者最好的支持。",
+    "\n\n🎯 广场内容挖矿进行中——点击 ${cashtag} 标签参与交易，我们一起在链上留下痕迹！",
 ]
 
 
@@ -213,8 +214,7 @@ def get_all_signals() -> list:
         return []
 
 
-def build_content_prompt(signal: dict, referral_link: str = "https://www.binance.com/referral/xxx",
-                         cta_index: int = 0) -> dict:
+def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
     """
     将聪明钱信号转化为内容层 Prompt
     返回 {prompt, coin, futures_tags, signal_type}
@@ -224,7 +224,7 @@ def build_content_prompt(signal: dict, referral_link: str = "https://www.binance
     data = signal["data"]
 
     futures_tags = FUTURES_TAG_MAP.get(coin, f"#{coin}USDT #{coin}合约")
-    cta = CTA_TEMPLATES[cta_index % len(CTA_TEMPLATES)].format(referral_link=referral_link)
+    cta = CTA_TEMPLATES[cta_index % len(CTA_TEMPLATES)].format(cashtag=coin)
 
     if sig_type in ["LONG_HIGH", "SHORT_HIGH"]:
         total_count = data.get("whale_count", 0)
@@ -321,7 +321,7 @@ if __name__ == "__main__":
         print(f"✅ 获取到 {len(signals)} 个信号")
         for i, sig in enumerate(signals[:3]):
             print(f"\n信号 {i+1}: {sig['type']} - {sig['coin']}")
-            content = build_content_prompt(sig, referral_link="https://www.binance.com/referral/test123")
+            content = build_content_prompt(sig)
             print(f"Prompt 长度: {len(content['prompt'])} 字符")
             print(f"期货标签: {content['futures_tags']}")
             print(f"Prompt 预览:\n{content['prompt'][:300]}...")

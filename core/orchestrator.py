@@ -124,9 +124,10 @@ class Orchestrator:
         # 生成内容
         print(f"\n[编排器] ✍️  生成 [{coin_info['tier']}级] {coin_info['coin']} 短贴...")
         context = {
-            "raw_tweets": self._market.get("raw_tweets", []),
-            "hot_posts":  self._market.get("hot_posts", []),
-            "topics":     self._market.get("topics", []),
+            "raw_tweets":       self._market.get("raw_tweets", []),
+            "hot_posts":        self._market.get("hot_posts", []),
+            "topics":           self._market.get("topics", []),
+            "w2e_top_creators": self._market.get("w2e_top_creators", {}),  # W2E 排行榜博主帖子
         }
         content = self.generator.generate(coin_info, context)
 
@@ -186,6 +187,66 @@ class Orchestrator:
         save_state(self.state)
         print("\n[编排器] 系统已停止。")
 
+    # ──────────────────────────────────────────
+    # W2E 模式：从排行榜博主帖子提取内容并发布
+    # ──────────────────────────────────────────
+    def run_once_w2e(self) -> bool:
+        """
+        执行一次 W2E 模式发帖：
+        从 W2E 排行榜博主帖子中提取素材 → LLM 改写 → 发布到广场。
+        返回 True 表示成功发帖。
+        """
+        from w2e_post_generator import W2EPostGenerator
+        gen = W2EPostGenerator()
+        result = gen.run_once()
+        return result.get("success", False)
+
+    def start_w2e(self, interval_minutes: int = 30):
+        """
+        启动 W2E 模式全自动循环：
+        每 interval_minutes 分钟从 W2E 排行榜博主帖子中提取内容，
+        经 LLM 改写后发布到币安广场，直到每日配额耗尽或手动停止。
+        """
+        if not self._self_check():
+            return
+
+        self._running = True
+        self.state["status"] = "running"
+        save_state(self.state)
+
+        print(f"\n{'═'*55}")
+        print(f"[编排器] 🚀 W2E 模式已启动")
+        print(f"  策略: 抓取排行榜前10博主帖子 → LLM 改写 → 发布")
+        print(f"  频率: 每 {interval_minutes} 分钟发帖一次")
+        print(f"  目标: {DAILY_LIMIT} 贴/天 | 今日已发: {self.state['daily_count']}")
+        print(f"{'═'*55}")
+
+        while self._running:
+            # 每日配额检查
+            if self.state["daily_count"] >= DAILY_LIMIT:
+                print(f"\n[编排器] 🎉 今日 {DAILY_LIMIT} 贴配额已完成！")
+                break
+
+            # 执行单次 W2E 发帖
+            self.run_once_w2e()
+            # 重新加载状态（W2EPostGenerator 内部会更新）
+            self.state = load_state()
+
+            if not self._running:
+                break
+
+            remaining = DAILY_LIMIT - self.state["daily_count"]
+            print(
+                f"\n[编排器-W2E] 📋 今日进度: {self.state['daily_count']}/{DAILY_LIMIT} "
+                f"| 剩余: {remaining} 贴 | 下次发帖: {interval_minutes} 分钟后"
+            )
+            time.sleep(interval_minutes * 60)
+
+        self._running = False
+        self.state["status"] = "idle"
+        save_state(self.state)
+        print("\n[编排器] W2E 模式已停止。")
+
     def stop(self):
         """优雅停止自动发帖循环。"""
         self._running = False
@@ -209,3 +270,136 @@ class Orchestrator:
             else:
                 print(f"  {coin}: 可发帖 ✓")
         print(f"{'═'*45}\n")
+
+    # ──────────────────────────────────────────
+    # 聪明钱模式：Hyperliquid 大户持仓信号发帖
+    # ──────────────────────────────────────────
+    def run_once_smart_money(self) -> bool:
+        """
+        执行一次聪明钱模式发帖：
+        聪明钱信号扫描 → 选择最优信号 → LLM 生成 → 发布到广场。
+        返回 True 表示成功发帖。
+        """
+        from config.settings import FUTURES_MAP
+        from smart_money.smart_money_monitor import aggregate_smart_money_signals, get_cached_signals
+        from smart_money.signal_to_content import get_all_signals, build_content_prompt
+        import random
+
+        print("\n[编排器-聪明钱] ── 开始聪明钱信号扫描 ──")
+
+        # 获取信号（优先使用缓存）
+        signals_data = get_cached_signals()
+        if not signals_data:
+            print("[编排器-聪明钱] 缓存过期，重新扫描...")
+            signals_data = aggregate_smart_money_signals()
+
+        if not signals_data or not signals_data.get("top_signals"):
+            print("[编排器-聪明钱] ⚠️  未获取到有效聪明钱信号，跳过本次")
+            return False
+
+        # 选择最优信号（配额检查）
+        quota = QuotaController(self.state)
+        all_signals = get_all_signals()
+
+        if not all_signals:
+            print("[编排器-聪明钱] ⚠️  无 HIGH/MEDIUM 置信度信号，跳过本次")
+            return False
+
+        selected_signal = None
+        for sig in all_signals:
+            coin = sig["coin"]
+            if coin not in FUTURES_MAP:
+                continue
+            ok, reason = quota.can_post(coin)
+            if ok:
+                selected_signal = sig
+                print(f"[编排器-聪明钱] ✅ 选中信号: [{sig['type']}] {coin}")
+                break
+            else:
+                print(f"[编排器-聪明钱] ⏸  跳过 {coin}: {reason}")
+
+        if not selected_signal:
+            print("[编排器-聪明钱] ⏳ 所有聪明钱代币均在冷却中")
+            return False
+
+        # 构建 coin_info
+        coin = selected_signal["coin"]
+        futures = FUTURES_MAP.get(coin, f"{coin}USDT")
+        sig_data = selected_signal.get("data", {})
+        tier = "S" if selected_signal.get("priority", 3) == 1 else (
+            "A" if selected_signal.get("priority", 3) == 2 else "B"
+        )
+
+        coin_info = {
+            "coin": coin,
+            "futures": futures,
+            "tier": tier,
+            "score": sig_data.get("total_size_usd", 0) / 1e6,
+            "tw_score": 0,
+            "sq_score": 0,
+            "smart_money_signal": selected_signal["type"],
+            "whale_count": sig_data.get("whale_count", 0),
+            "long_ratio": sig_data.get("long_ratio", 50),
+            "net_direction": sig_data.get("net_direction", "NEUTRAL"),
+            "total_size_usd": sig_data.get("total_size_usd", 0),
+            "mark_px": sig_data.get("mark_px", 0),
+            "change_24h": sig_data.get("change_24h", 0),
+            "funding_rate": sig_data.get("funding_rate", 0),
+        }
+
+        # 构建聪明钱专属 Prompt
+        print(f"\n[编排器-聪明钱] ✍️  生成 [{tier}级] {coin} 聪明钱短贴...")
+        cta_index = random.randint(0, 4)
+        sm_prompt_data = build_content_prompt(selected_signal, cta_index=cta_index)
+
+        # LLM 生成内容
+        content = self.generator.generate_from_smart_money_prompt(
+            coin_info=coin_info,
+            sm_prompt=sm_prompt_data["prompt"],
+            cta=sm_prompt_data["cta"],
+        )
+
+        # 打印预览
+        print(f"\n{'─'*55}")
+        print(content)
+        print(f"{'─'*55}")
+
+        # 执行发帖
+        result = execute_post(coin_info, content, self.state, quota, self.poster)
+        return result.get("success", False)
+
+    def start_smart_money(self, interval_minutes: int = 15):
+        """
+        启动聪明钱模式全自动循环：
+        每 interval_minutes 分钟扫描一次 Hyperliquid 大户持仓，
+        发现高置信度信号后生成并发布到币安广场，直到每日配额耗尽或手动停止。
+        """
+        if not self._self_check():
+            return
+        self._running = True
+        self.state["status"] = "running"
+        save_state(self.state)
+        print(f"\n{'═'*55}")
+        print(f"[编排器] 🐋 聪明钱模式已启动")
+        print(f"  策略: Hyperliquid 大户持仓扫描 → 信号生成 → LLM 改写 → 发布")
+        print(f"  频率: 每 {interval_minutes} 分钟扫描一次")
+        print(f"  目标: {DAILY_LIMIT} 贴/天 | 今日已发: {self.state['daily_count']}")
+        print(f"{'═'*55}")
+        while self._running:
+            if self.state["daily_count"] >= DAILY_LIMIT:
+                print(f"\n[编排器] 🎉 今日 {DAILY_LIMIT} 贴配额已完成！")
+                break
+            self.run_once_smart_money()
+            self.state = load_state()
+            if not self._running:
+                break
+            remaining = DAILY_LIMIT - self.state["daily_count"]
+            print(
+                f"\n[编排器-聪明钱] 📋 今日进度: {self.state['daily_count']}/{DAILY_LIMIT} "
+                f"| 剩余: {remaining} 贴 | 下次扫描: {interval_minutes} 分钟后"
+            )
+            time.sleep(interval_minutes * 60)
+        self._running = False
+        self.state["status"] = "idle"
+        save_state(self.state)
+        print("\n[编排器] 聪明钱模式已停止。")
