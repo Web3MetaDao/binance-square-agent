@@ -53,51 +53,59 @@ FUTURES_TAG_MAP = {
     "HYPER": "#HYPERUSDT #HYPER合约",
 }
 
+# ── 格式常量 ──────────────────────────────────────────────────────────────────
+
+# 固定免责声明
+DISCLAIMER = "⚠️免责声明：\n本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。"
+
+# 通用话题标签
+GENERAL_TAGS = "#加密货币 #合约分析 #山寨币观察 #交易策略分享"
+
 # ── Prompt 模板 ────────────────────────────────────────────────────────────────
 
 PROMPT_TEMPLATES = {
     "LONG_HIGH": """
-你是一个在币安广场上拥有百万粉丝的加密货币 KOL，风格犀利、有数据支撑、真实可信。
+你是一个在币安广场上拥有百万粉丝的加密货币 KOL，风格犀利、有观点、真实可信。
 
 当前链上聪明钱信号：
 - 代币：{coin}
-- 信号：{whale_count} 个 Hyperliquid 顶级大户中 {long_count} 个正在做多
-- 多空比：{long_ratio:.0f}% 做多
+- {whale_count} 个 Hyperliquid 顶级大户中 {long_count} 个正在做多，多头占比 {long_ratio:.0f}%
 - 大户总持仓规模：${total_size_m:.1f}M
-- 当前价格：${mark_px:,.2f}
-- 24小时涨跌：{change_24h:+.1f}%
+- 当前价格：${mark_px:,.2f}，24H涨跌 {change_24h:+.1f}%
 - 资金费率：{funding_rate:+.4f}%（{funding_signal}）
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头必须有强力 Hook（让人忍不住继续读）
-2. 用真实数据说话，不要空话套话
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，像真人在说话，不要 AI 八股文
-5. 必须包含这些标签：{futures_tags} #链上数据 #聪明钱
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」「据悉」「据了解」
+[正文]
+（80-150字，有观点有态度，像真人在说话，开头必须有强力Hook，不要空话套话）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
 
     "SHORT_HIGH": """
-你是一个在币安广场上拥有百万粉丝的加密货币 KOL，风格犀利、有数据支撑、真实可信。
+你是一个在币安广场上拥有百万粉丝的加密货币 KOL，风格犀利、有观点、真实可信。
 
 当前链上聪明钱信号：
 - 代币：{coin}
-- 信号：{whale_count} 个 Hyperliquid 顶级大户中 {short_count} 个正在做空
-- 多空比：{short_ratio:.0f}% 做空
+- {whale_count} 个 Hyperliquid 顶级大户中 {short_count} 个正在做空，空头占比 {short_ratio:.0f}%
 - 大户总持仓规模：${total_size_m:.1f}M
-- 当前价格：${mark_px:,.2f}
-- 24小时涨跌：{change_24h:+.1f}%
+- 当前价格：${mark_px:,.2f}，24H涨跌 {change_24h:+.1f}%
 - 资金费率：{funding_rate:+.4f}%（{funding_signal}）
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头必须有强力 Hook（让人感到紧迫或好奇）
-2. 用真实链上数据支撑观点
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，像真人在说话
-5. 必须包含这些标签：{futures_tags} #链上数据 #聪明钱
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」「据悉」「据了解」
+[正文]
+（80-150字，有观点有态度，像真人在说话，开头必须有强力Hook，不要空话套话）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
 
     "FUNDING_EXTREME": """
@@ -106,17 +114,18 @@ PROMPT_TEMPLATES = {
 当前资金费率异常信号：
 - 代币：{coin}
 - 资金费率：{funding_rate:+.4f}%（{funding_signal}）
-- 当前价格：${mark_px:,.2f}
-- 24小时涨跌：{change_24h:+.1f}%
+- 当前价格：${mark_px:,.2f}，24H涨跌 {change_24h:+.1f}%
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 解释资金费率异常意味着什么（多头/空头过热）
-2. 给出你的交易观点（是否可以反向操作）
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，有个人观点
-5. 必须包含这些标签：{futures_tags} #资金费率 #合约交易
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」
+[正文]
+（80-150字，解释资金费率异常意味着什么，给出个人交易观点，像真人在说话）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」
 """,
 
     "OI_SURGE": """
@@ -124,19 +133,19 @@ PROMPT_TEMPLATES = {
 
 当前 OI 异动信号：
 - 代币：{coin}
-- 当前 OI：${oi_usd_m:.1f}M（Hyperliquid 全市场排名 Top）
-- 当前价格：${mark_px:,.2f}
-- 24小时涨跌：{change_24h:+.1f}%
-- 24小时成交量：${day_vol_m:.1f}M
+- 当前 OI：${oi_usd_m:.1f}M，当前价格：${mark_px:,.2f}
+- 24H涨跌 {change_24h:+.1f}%，24H成交量：${day_vol_m:.1f}M
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 用 OI 数据说明主力资金的动向
-2. 给出你对后市的判断
-3. 结尾引导用户点击合约链接
-4. 语气真实自然
-5. 必须包含这些标签：{futures_tags} #OI数据 #合约交易
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」
+[正文]
+（80-150字，用OI数据说明主力资金动向，给出后市判断，像真人在说话）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」
 """,
 
     # ── TG 专属模板 ────────────────────────────────────────────────────────────
@@ -146,20 +155,20 @@ PROMPT_TEMPLATES = {
 
 最新链上巨鲸信号（来自 HyperInsight）：
 - 代币：{coin}
-- 操作：{action}（做多）
-- 操作规模：约 ${size_usd_m:.2f}M 美元
-- 当前价格：${price:,.2f}
-- 当前浮盈：{pnl_pct:+.1f}%
+- 操作：{action}（做多），规模：约 ${size_usd_m:.2f}M
+- 当前价格：${price:,.2f}，当前浮盈：{pnl_pct:+.1f}%
 - 巨鲸背景：{note}
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头突出巨鲸的真实操作（加仓/开仓金额）
-2. 结合巨鲸背景讲故事，让读者感受到信号的可信度
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，像真人在说话
-5. 必须包含这些标签：{futures_tags} #链上巨鲸 #聪明钱
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」「据悉」「据了解」
+[正文]
+（80-150字，突出巨鲸真实操作金额，结合背景讲故事，像真人在说话）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
 
     "TG_WHALE_SHORT": """
@@ -167,20 +176,20 @@ PROMPT_TEMPLATES = {
 
 最新链上巨鲸信号（来自 HyperInsight）：
 - 代币：{coin}
-- 操作：{action}（做空）
-- 操作规模：约 ${size_usd_m:.2f}M 美元
-- 当前价格：${price:,.2f}
-- 当前浮盈：{pnl_pct:+.1f}%
+- 操作：{action}（做空），规模：约 ${size_usd_m:.2f}M
+- 当前价格：${price:,.2f}，当前浮盈：{pnl_pct:+.1f}%
 - 巨鲸背景：{note}
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头突出巨鲸的真实做空操作
-2. 分析巨鲸为何在此价位做空
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，有个人观点
-5. 必须包含这些标签：{futures_tags} #链上巨鲸 #聪明钱
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」「据悉」「据了解」
+[正文]
+（80-150字，突出巨鲸真实做空操作，分析为何在此价位做空，像真人在说话）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
 
     "TG_OI_SURGE": """
@@ -188,19 +197,19 @@ PROMPT_TEMPLATES = {
 
 最新币安合约异动信号（来自方程式 OI 监控）：
 - 代币：{coin}
-- OI 变化：{oi_change_pct:+.1f}%（过去 1 小时）
-- 价格变化：{price_change_pct:+.1f}%（过去 1 小时）
-- 24 小时涨跌：{h24_change_pct:+.1f}%
-- 当前 OI 规模：约 ${oi_usd_m:.1f}M
+- OI 变化：{oi_change_pct:+.1f}%，价格变化：{price_change_pct:+.1f}%（过去 1 小时）
+- 24H涨跌：{h24_change_pct:+.1f}%，当前 OI：${oi_usd_m:.1f}M
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头突出 OI 和价格同步暴涨的异常信号
-2. 解释这意味着主力在快速建仓
-3. 结尾引导用户点击合约链接
-4. 语气紧迫真实，让读者感受到机会
-5. 必须包含这些标签：{futures_tags} #OI异动 #合约交易
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」
+[正文]
+（80-150字，突出OI和价格同步暴涨的异常信号，解释主力快速建仓，语气紧迫真实）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」
 """,
 
     "TG_OI_DROP": """
@@ -208,19 +217,19 @@ PROMPT_TEMPLATES = {
 
 最新币安合约异动信号（来自方程式 OI 监控）：
 - 代币：{coin}
-- OI 变化：{oi_change_pct:+.1f}%（过去 1 小时）
-- 价格变化：{price_change_pct:+.1f}%（过去 1 小时）
-- 24 小时涨跌：{h24_change_pct:+.1f}%
-- 当前 OI 规模：约 ${oi_usd_m:.1f}M
+- OI 变化：{oi_change_pct:+.1f}%，价格变化：{price_change_pct:+.1f}%（过去 1 小时）
+- 24H涨跌：{h24_change_pct:+.1f}%，当前 OI：${oi_usd_m:.1f}M
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头突出 OI 骤降 + 价格下跌的异常信号
-2. 解释这意味着主力在快速平仓或做空
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，有个人观点
-5. 必须包含这些标签：{futures_tags} #OI异动 #合约交易
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」
+[正文]
+（80-150字，突出OI骤降+价格下跌的异常信号，解释主力平仓或做空，语气真实自然）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」
 """,
 
     "TG_COMBINED": """
@@ -229,28 +238,25 @@ PROMPT_TEMPLATES = {
 多源信号共振（Hyperliquid 巨鲸 + 币安 OI 双重确认）：
 - 代币：{coin}
 - 巨鲸信号：{whale_action}（${whale_size_m:.1f}M）
-- OI 异动：{oi_change_pct:+.1f}%，价格 {price_change_pct:+.1f}%
-- 24 小时涨跌：{h24_change_pct:+.1f}%
+- OI 异动：{oi_change_pct:+.1f}%，价格 {price_change_pct:+.1f}%，24H涨跌 {h24_change_pct:+.1f}%
 
-请生成一条 80-150 字的高吸引力广场短贴，要求：
-1. 开头突出「链上巨鲸 + OI 双重共振」的稀有信号
-2. 用数据说明两个信号共同指向同一方向
-3. 结尾引导用户点击合约链接
-4. 语气真实自然，充满信心
-5. 必须包含这些标签：{futures_tags} #链上巨鲸 #OI异动 #聪明钱
+请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
-禁止使用的词：「值得关注」「不构成投资建议」「仅供参考」
+[正文]
+（80-150字，突出「链上巨鲸+OI双重共振」的稀有信号，用数据说明两个信号共同指向，语气充满信心）
+
+{general_tags}
+{disclaimer} {cashtag_line}
+
+只输出上述格式的内容，不要输出任何解释、前缀或引号。
+禁止使用的词：「值得关注」「仅供参考」
 """,
 }
 
-# 内容挖矿 CTA 模板（Write to Earn，随机轮换）
-CTA_TEMPLATES = [
-    "\n\n💡 点击上方 ${cashtag} 标签查看实时行情，直接在广场交易更方便。",
-    "\n\n📊 感兴趣的话点击 ${cashtag} 看看实时价格，广场内交易还能给我贡献一点挖矿收益😄",
-    "\n\n🔍 点击帖子里的 ${cashtag} 标签可以直接跳转行情页，欢迎交流讨论！",
-    "\n\n⚡ 觉得分析有用的话，点击 ${cashtag} 标签看看行情，你的每一笔交易都是对创作者最好的支持。",
-    "\n\n🎯 广场内容挖矿进行中——点击 ${cashtag} 标签参与交易，我们一起在链上留下痕迹！",
-]
+# CTA 已内嵌在格式要求中（免责声明末尾的 $CashTag），不再单独追加
+CTA_TEMPLATES = [""]  # 保留兼容性，实际不使用
+
+
 
 
 # ── 信号融合 ───────────────────────────────────────────────────────────────────
@@ -407,7 +413,10 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
     data = signal["data"]
 
     futures_tags = FUTURES_TAG_MAP.get(coin, f"#{coin}USDT #{coin}合约")
-    cta = CTA_TEMPLATES[cta_index % len(CTA_TEMPLATES)].format(cashtag=coin)
+    # 构建 $CashTag 行（触发合约卡片）
+    cashtag_line = f"${coin} $BTC $ETH $BNB"
+    # 不再使用独立 CTA，格式已内嵌在 Prompt 中
+    cta = ""
 
     prompt = ""
 
@@ -436,6 +445,9 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             funding_rate=funding_rate,
             funding_signal=funding_signal,
             futures_tags=futures_tags,
+            general_tags=GENERAL_TAGS,
+            disclaimer=DISCLAIMER,
+            cashtag_line=cashtag_line,
         )
 
     elif sig_type == "FUNDING_EXTREME":
@@ -451,6 +463,9 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             mark_px=mark_px,
             change_24h=change_24h,
             futures_tags=futures_tags,
+            general_tags=GENERAL_TAGS,
+            disclaimer=DISCLAIMER,
+            cashtag_line=cashtag_line,
         )
 
     elif sig_type == "OI_SURGE":
@@ -466,6 +481,9 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             oi_usd_m=oi_usd_m,
             day_vol_m=day_vol_m,
             futures_tags=futures_tags,
+            general_tags=GENERAL_TAGS,
+            disclaimer=DISCLAIMER,
+            cashtag_line=cashtag_line,
         )
 
     elif sig_type in ["TG_WHALE_LONG", "TG_WHALE_SHORT"]:
@@ -483,6 +501,9 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             pnl_pct=pnl_pct,
             note=note,
             futures_tags=futures_tags,
+            general_tags=GENERAL_TAGS,
+            disclaimer=DISCLAIMER,
+            cashtag_line=cashtag_line,
         )
 
     elif sig_type in ["TG_OI_SURGE", "TG_OI_DROP"]:
@@ -498,6 +519,9 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             h24_change_pct=h24_change_pct,
             oi_usd_m=oi_usd_m,
             futures_tags=futures_tags,
+            general_tags=GENERAL_TAGS,
+            disclaimer=DISCLAIMER,
+            cashtag_line=cashtag_line,
         )
 
     elif sig_type == "TG_COMBINED":
@@ -515,13 +539,13 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             price_change_pct=price_change_pct,
             h24_change_pct=h24_change_pct,
             futures_tags=futures_tags,
+            general_tags=GENERAL_TAGS,
+            disclaimer=DISCLAIMER,
+            cashtag_line=cashtag_line,
         )
 
     else:
         prompt = f"请生成一条关于 {coin} 的高吸引力广场短贴，包含标签 {futures_tags}"
-
-    # 在 Prompt 末尾附加 CTA 指令
-    prompt += f"\n\n在短贴末尾加上这条 CTA（原文保留）：{cta}"
 
     return {
         "prompt":      prompt,
