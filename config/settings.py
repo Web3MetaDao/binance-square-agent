@@ -68,7 +68,7 @@ MAX_JITTER_MIN    = 3      # 发帖间隔随机抖动上限（分钟）
 # ══════════════════════════════════════════════
 # LLM 配置
 # ══════════════════════════════════════════════
-LLM_MODEL         = os.environ.get("LLM_MODEL", "gpt-4.1-mini")
+LLM_MODEL         = os.environ.get("LLM_MODEL", "gpt-5.5")
 LLM_TEMPERATURE   = 0.85
 LLM_MAX_TOKENS    = 500
 POST_MIN_CHARS    = 80     # 短贴最小字数
