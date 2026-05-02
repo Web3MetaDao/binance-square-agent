@@ -17,11 +17,11 @@ from pathlib import Path
 
 BASE_DIR = "/root/binance-square-agent"
 sys.path.insert(0, BASE_DIR)
-sys.path.insert(0, os.path.join(BASE_DIR, "research"))
+
+from research.pipeline import DailyResearchPipeline
 
 # ── 健壮 .env 加载 ──────────────────────────────────────────
 def _load_env(path: str) -> None:
-    """加载 .env 文件，比基本的逐行解析更健壮。"""
     if not os.path.exists(path):
         print(f"[_round_runner] ⚠️ .env not found at {path}", file=sys.stderr, flush=True)
         return
@@ -33,7 +33,6 @@ def _load_env(path: str) -> None:
             key, _, val = line.partition("=")
             key = key.strip()
             val = val.strip()
-            # 去除两端引号
             if (val.startswith("'") and val.endswith("'")) or \
                (val.startswith('"') and val.endswith('"')):
                 val = val[1:-1]

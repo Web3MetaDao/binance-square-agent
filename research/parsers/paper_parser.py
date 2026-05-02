@@ -5,6 +5,7 @@ PaperParser — 原始文档 → 结构化策略字典
 返回符合 strategy_library schema 的 dict。
 """
 
+import re
 import json
 import os
 import time
@@ -216,4 +217,19 @@ class PaperParser:
                 lines = lines[:-1]
             cleaned = "\n".join(lines).strip()
 
-        return json.loads(cleaned)
+        result = json.loads(cleaned)
+        # 递归清洗所有字符串字段中的 HTML 标签
+        result = self._clean_html_tags(result)
+        return result
+
+    def _clean_html_tags(self, data):
+        """递归清洗 dict/list 中所有字符串字段的 HTML 标签。"""
+        if isinstance(data, str):
+            cleaned = re.sub(r'<[^>]+>', '', data)
+            cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+            return cleaned
+        elif isinstance(data, dict):
+            return {k: self._clean_html_tags(v) for k, v in data.items()}
+        elif isinstance(data, list):
+            return [self._clean_html_tags(i) for i in data]
+        return data
