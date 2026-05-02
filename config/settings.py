@@ -153,3 +153,13 @@ TG_MAX_AGE_HOURS = int(os.environ.get("TG_MAX_AGE_HOURS", "2"))
 TG_API_ID       = os.environ.get("TG_API_ID",       "22370331")
 TG_API_HASH     = os.environ.get("TG_API_HASH",     "ce19c89e0781f6f6e5c5dc0049c1af96")
 TG_SESSION_NAME = os.environ.get("TG_SESSION_NAME", "binance_agent_tg")
+
+# ══════════════════════════════════════════════
+# DeepSeek LLM (研究管线专用)
+# 用于研究管线 PaperParser 的策略文档解析
+# 注意：在 PaperParser 中会延迟从 os.environ 读取实际值，
+# 因为模块加载时 .env 可能尚未被加载到环境变量中。
+# ══════════════════════════════════════════════
+
+# PaperParser 在 __init__ 中从 os.environ 延迟读取，详阅 paper_parser.py
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")

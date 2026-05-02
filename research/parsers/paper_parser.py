@@ -6,13 +6,18 @@ PaperParser — 原始文档 → 结构化策略字典
 """
 
 import json
+import os
 import time
 import logging
 from typing import Optional
 
 from openai import OpenAI
 
-from config.settings import OPENAI_API_KEY, OPENAI_BASE_URL, LLM_MODEL
+from config.settings import (
+    OPENAI_API_KEY,
+    OPENAI_BASE_URL,
+    DEEPSEEK_MODEL,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -40,17 +45,55 @@ EXTRACTION_PROMPT = """你是一位资深量化交易策略分析师。请从以
 class PaperParser:
     """原始文档 → 结构化策略字典"""
 
-    def __init__(self, model: Optional[str] = None):
-        if not OPENAI_API_KEY:
-            raise RuntimeError(
-                "OPENAI_API_KEY is not set. "
-                "Check your .env file or environment variables."
+    def __init__(self, model: Optional[str] = None, use_deepseek: bool = True):
+        """PaperParser — 原始文档 → 结构化策略字典。
+
+        Args:
+            model: 手动指定模型名，覆盖默认。
+            use_deepseek: 如果为 True（默认），使用独立的 DeepSeek 配置
+                          （DEEPSEEK_API_KEY/DEEPSEEK_BASE_URL/DEEPSEEK_MODEL）。
+                          如果为 False，回退使用通用的 OpenAI 配置。
+        """
+        if use_deepseek:
+            key = os.environ.get("DEEPSEEK_API_KEY") or os.environ.get("DEEPSEEK_API_KEY")
+            if not key:
+                logger.warning(
+                    "DEEPSEEK_API_KEY not set in env — falling back to OPENAI_API_KEY"
+                )
+                if not OPENAI_API_KEY:
+                    raise RuntimeError(
+                        "Neither DEEPSEEK_API_KEY nor OPENAI_API_KEY is set. "
+                        "Check your .env file or environment variables."
+                    )
+                self.client = OpenAI(
+                    api_key=OPENAI_API_KEY,
+                    base_url=OPENAI_BASE_URL or "https://api.openai.com/v1",
+                )
+                self.model = model or "gpt-4o"
+            else:
+                base_url = os.environ.get(
+                    "DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1"
+                )
+                self.client = OpenAI(api_key=key, base_url=base_url)
+                self.model = model or DEEPSEEK_MODEL
+                logger.info(
+                    "PaperParser initialized with DeepSeek (model=%s, base=%s)",
+                    self.model, base_url,
+                )
+        else:
+            if not OPENAI_API_KEY:
+                raise RuntimeError(
+                    "OPENAI_API_KEY is not set. "
+                    "Check your .env file or environment variables."
+                )
+            self.client = OpenAI(
+                api_key=OPENAI_API_KEY,
+                base_url=OPENAI_BASE_URL or "https://api.openai.com/v1",
             )
-        self.client = OpenAI(
-            api_key=OPENAI_API_KEY,
-            base_url=OPENAI_BASE_URL or "https://api.openai.com/v1",
-        )
-        self.model = model or LLM_MODEL or "deepseek-chat"
+            self.model = model or "gpt-4o"
+            logger.info(
+                "PaperParser initialized with OpenAI (model=%s)", self.model,
+            )
 
     # ── 公开接口 ──────────────────────────────────────────────────
 
@@ -121,10 +164,24 @@ class PaperParser:
     # ── 内部方法 ──────────────────────────────────────────────────
 
     def _call_hermes(self, text: str) -> str:
-        """调用 Hermes API（OpenAI 兼容格式），返回原始 JSON 字符串。"""
+        """调用 Hermes 兼容 API（OpenAI 格式），返回原始 JSON 字符串。"""
         prompt = EXTRACTION_PROMPT.format(text=text)
 
         import httpx
+        # 对长文本做截断保护（DeepSeek 上下文窗口限制）
+        max_chars = 120_000  # deepseek-chat ~128K 上下文，保留余量
+        if len(prompt) > max_chars:
+            logger.warning(
+                "Prompt too long (%d chars), truncating to %d",
+                len(prompt), max_chars,
+            )
+            # 从文档内容部分截断，保留 prompt 框架
+            prefix = EXTRACTION_PROMPT[:EXTRACTION_PROMPT.index("{text}")]
+            suffix = EXTRACTION_PROMPT[EXTRACTION_PROMPT.index("{text}") + 6:]
+            available = max_chars - len(prefix) - len(suffix) - 100
+            truncated_text = text[:available]
+            prompt = prefix + truncated_text + suffix
+
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
@@ -136,7 +193,7 @@ class PaperParser:
 
         content = response.choices[0].message.content
         if not content or not content.strip():
-            raise ValueError("Hermes returned empty response")
+            raise ValueError("API returned empty response")
 
         return content.strip()
 

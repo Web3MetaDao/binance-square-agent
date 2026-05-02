@@ -1,5 +1,5 @@
 {
-  "scanned_at": "2026-05-02T17:53:00.655929+00:00",
+  "scanned_at": "2026-05-02T18:24:11.535082+00:00",
   "time_window_min": 30,
   "total_posts_scanned": 39,
   "total_creators_scanned": 10,
@@ -9,11 +9,11 @@
       "mention_count": 18,
       "sentiment": "bullish",
       "source_creators": [
-        "Anh Tú Jr",
-        "محترف عملات رقميه",
-        "Bit_Guru",
+        "摩托BTC",
         "Crypto_Hu",
-        "摩托BTC"
+        "Anh Tú Jr",
+        "Bit_Guru",
+        "Mike On The Move"
       ],
       "mention_share": 46.2
     },
@@ -22,10 +22,10 @@
       "mention_count": 11,
       "sentiment": "bullish",
       "source_creators": [
+        "Bit_Guru",
         "Mike On The Move",
-        "BlockchainBaller",
         "Anh Tú Jr",
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 28.2
     },
@@ -34,9 +34,9 @@
       "mention_count": 11,
       "sentiment": "bullish",
       "source_creators": [
+        "Bit_Guru",
         "Mike On The Move",
-        "BlockchainBaller",
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 28.2
     },
@@ -55,9 +55,9 @@
       "mention_count": 8,
       "sentiment": "bullish",
       "source_creators": [
+        "Bit_Guru",
         "Mike On The Move",
-        "BlockchainBaller",
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 20.5
     },
@@ -66,8 +66,8 @@
       "mention_count": 7,
       "sentiment": "bullish",
       "source_creators": [
-        "BlockchainBaller",
-        "Bit_Guru"
+        "Bit_Guru",
+        "BlockchainBaller"
       ],
       "mention_share": 17.9
     },
@@ -76,8 +76,8 @@
       "mention_count": 5,
       "sentiment": "neutral",
       "source_creators": [
-        "Mike On The Move",
         "Bit_Guru",
+        "Mike On The Move",
         "摩托BTC"
       ],
       "mention_share": 12.8
@@ -101,15 +101,6 @@
       "mention_share": 10.3
     },
     {
-      "coin": "MATIC",
-      "mention_count": 3,
-      "sentiment": "neutral",
-      "source_creators": [
-        "Bit_Guru"
-      ],
-      "mention_share": 7.7
-    },
-    {
       "coin": "NEAR",
       "mention_count": 3,
       "sentiment": "bullish",
@@ -119,12 +110,21 @@
       "mention_share": 7.7
     },
     {
+      "coin": "MATIC",
+      "mention_count": 3,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 7.7
+    },
+    {
       "coin": "BTC",
       "mention_count": 2,
       "sentiment": "neutral",
       "source_creators": [
-        "Mike On The Move",
-        "Bit_Guru"
+        "Bit_Guru",
+        "Mike On The Move"
       ],
       "mention_share": 5.1
     },
@@ -136,6 +136,15 @@
         "Bit_Guru"
       ],
       "mention_share": 5.1
+    },
+    {
+      "coin": "TIA",
+      "mention_count": 1,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 2.6
     },
     {
       "coin": "ENA",
@@ -174,15 +183,6 @@
       "mention_share": 2.6
     },
     {
-      "coin": "TIA",
-      "mention_count": 1,
-      "sentiment": "bullish",
-      "source_creators": [
-        "BlockchainBaller"
-      ],
-      "mention_share": 2.6
-    },
-    {
       "coin": "ARB",
       "mention_count": 1,
       "sentiment": "bullish",
@@ -198,11 +198,11 @@
       "mention_count": 18,
       "sentiment": "bullish",
       "source_creators": [
-        "Anh Tú Jr",
-        "محترف عملات رقميه",
-        "Bit_Guru",
+        "摩托BTC",
         "Crypto_Hu",
-        "摩托BTC"
+        "Anh Tú Jr",
+        "Bit_Guru",
+        "Mike On The Move"
       ],
       "mention_share": 46.2
     },
@@ -211,10 +211,10 @@
       "mention_count": 11,
       "sentiment": "bullish",
       "source_creators": [
+        "Bit_Guru",
         "Mike On The Move",
-        "BlockchainBaller",
         "Anh Tú Jr",
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 28.2
     },
@@ -223,9 +223,9 @@
       "mention_count": 11,
       "sentiment": "bullish",
       "source_creators": [
+        "Bit_Guru",
         "Mike On The Move",
-        "BlockchainBaller",
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 28.2
     },
@@ -244,9 +244,9 @@
       "mention_count": 8,
       "sentiment": "bullish",
       "source_creators": [
+        "Bit_Guru",
         "Mike On The Move",
-        "BlockchainBaller",
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 20.5
     },
@@ -255,8 +255,8 @@
       "mention_count": 7,
       "sentiment": "bullish",
       "source_creators": [
-        "BlockchainBaller",
-        "Bit_Guru"
+        "Bit_Guru",
+        "BlockchainBaller"
       ],
       "mention_share": 17.9
     },
@@ -265,8 +265,8 @@
       "mention_count": 5,
       "sentiment": "neutral",
       "source_creators": [
-        "Mike On The Move",
         "Bit_Guru",
+        "Mike On The Move",
         "摩托BTC"
       ],
       "mention_share": 12.8
@@ -290,11 +290,11 @@
       "mention_share": 10.3
     },
     {
-      "coin": "MATIC",
+      "coin": "NEAR",
       "mention_count": 3,
-      "sentiment": "neutral",
+      "sentiment": "bullish",
       "source_creators": [
-        "Bit_Guru"
+        "BlockchainBaller"
       ],
       "mention_share": 7.7
     }

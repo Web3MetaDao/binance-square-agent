@@ -149,7 +149,7 @@ class StrategyStore:
         """Get the singleton connection (caller must hold _lock when using it)."""
         if self._conn_singleton is None:
             c = sqlite3.connect(self._db_path, check_same_thread=False,
-                                isolation_level=None)
+                                isolation_level=None, timeout=10)
             c.row_factory = sqlite3.Row
             c.execute("PRAGMA journal_mode=WAL")
             # Note: PRAGMA foreign_keys=ON disables autocommit, so we
@@ -315,6 +315,15 @@ class StrategyStore:
                 (f"-{hours} hours",),
             ).fetchall()
             return [dict(r) for r in rows]
+
+    def get_strategy_by_name(self, name: str) -> Optional[dict]:
+        with self._with_lock():
+            c = self._conn()
+            row = c.execute(
+                "SELECT * FROM strategy_library WHERE strategy_name = ?",
+                (name,),
+            ).fetchone()
+            return dict(row) if row else None
 
     # ── Strategy Fusion ──────────────────────────────────
 

@@ -27,6 +27,14 @@ data/smart_money_signal.json
 data/tg_signals_cache.json
 data/binance_agent_tg.session
 logs/
+data/pipeline_result_round*.json
+data/review_latest.json
+data/surge_signals_cache.json
+data/surge_square_sent.json
+data/tri_price_snapshot.json
+data/tri_surge_snapshot.json
+data/v2_ab_compare.json
+data/.round*_error
 
 # IDE
 .vscode/

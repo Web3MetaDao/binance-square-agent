@@ -6,6 +6,7 @@ OverfitReviewer — 过拟合风险审核器
 """
 
 import json
+import os
 import logging
 from typing import Optional
 
@@ -71,16 +72,11 @@ class OverfitReviewer:
     """过拟合风险审核器 — Hermes 驱动"""
 
     def __init__(self, model: Optional[str] = None):
-        if not OPENAI_API_KEY:
-            raise RuntimeError(
-                "OPENAI_API_KEY is not set. "
-                "Check your .env file or environment variables."
-            )
         self.client = OpenAI(
-            api_key=OPENAI_API_KEY,
-            base_url=OPENAI_BASE_URL or "https://api.openai.com/v1",
+            api_key=os.environ.get("DEEPSEEK_API_KEY") or OPENAI_API_KEY,
+            base_url=os.environ.get("DEEPSEEK_BASE_URL") or OPENAI_BASE_URL or "https://api.openai.com/v1",
         )
-        self.model = model or LLM_MODEL or "deepseek-chat"
+        self.model = model or os.environ.get("DEEPSEEK_MODEL") or LLM_MODEL or "deepseek-chat"
 
     # ── 公开接口 ──────────────────────────────────────────────────
 

@@ -107,7 +107,7 @@ class DailyResearchPipeline:
     ) -> None:
         self.store = store or StrategyStore()
         self.harvester = harvester or UnifiedHarvester(max_items_per_source=10)
-        self.parser = parser or PaperParser()
+        self.parser = parser or PaperParser(use_deepseek=True)
         self.optimizer = optimizer or StrategyOptimizer()
         self.reviewer = reviewer or OverfitReviewer()
         self.pipeline = pipeline or BacktestPipeline()
@@ -308,6 +308,9 @@ class DailyResearchPipeline:
                 )
                 result["source_ids"][parsed.get("strategy_name", "?")] = source_id
 
+                # 修复键名对齐: parsed 中的 _raw_source_url → insert_strategy 需要的 raw_source_url
+                parsed["raw_source_url"] = parsed.get("_raw_source_url", "")
+
                 strategy_id = self.store.insert_strategy(source_id, parsed)
                 if strategy_id is not None:
                     result["stored_count"] += 1
@@ -366,7 +369,30 @@ class DailyResearchPipeline:
             result["candidate_count"] = len(candidates)
 
             # Store the fusion result immediately to get a fusion_id
-            base_id = 1  # placeholder — surge_scanner_v2 is the base
+            # Dynamically resolve base_strategy_id from DB or create it
+            base_strat = self.store.get_strategy_by_name("surge_scanner_v2")
+            if base_strat:
+                base_id = base_strat["id"]
+            else:
+                # Base strategy not in DB yet — insert it
+                # First ensure the system source exists
+                sys_source_id = self.store.upsert_source(
+                    name="system", s_type="system", url=""
+                )
+                base_id = self.store.insert_strategy(
+                    data={
+                        "strategy_name": "surge_scanner_v2",
+                        "author_institution": "Hermes System",
+                        "core_indicators": ["Supertrend", "ADX", "BB+RSI", "CandleWick", "FVG", "UMACD"],
+                        "entry_conditions": ["多指标共振入场"],
+                        "exit_conditions": ["指标反转/止损"],
+                        "risk_management": "多层级风控",
+                        "backtest_results": None,
+                        "innovation_points": [],
+                        "applicable_markets": ["crypto_perpetual"],
+                    },
+                    source_id=sys_source_id,
+                )
             parent_ids = [s.get("id", 0) for s in candidates if s.get("id")]
             prompt = ""  # prompt reconstructed from optimizer internals
             hermes_json = json.dumps(
