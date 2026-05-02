@@ -46,6 +46,7 @@ def main():
         from layers.content import ContentGenerator
         from smart_money.smart_money_monitor import aggregate_smart_money_signals, get_cached_signals
         from smart_money.signal_to_content import get_all_signals, build_content_prompt
+        import utils.price_sync as price_sync
 
         state = load_state()
 
@@ -103,6 +104,9 @@ def main():
             print("STATUS: SKIPPED")
             return
 
+        # ── Step 3: 发帖前强制同步币安期货价格，并保留 freshness 元数据 ───────────
+        selected_signal = price_sync.enrich_signal_price(selected_signal)
+
         # ── Step 3: 构建 coin_info（与热点模式格式兼容）─────────────────────────
         coin = selected_signal["coin"]
         futures = FUTURES_MAP.get(coin, f"{coin}USDT")
@@ -141,6 +145,7 @@ def main():
         import random
         cta_index = random.randint(0, 4)
         sm_prompt_data = build_content_prompt(selected_signal, cta_index=cta_index)
+        coin_info.update(sm_prompt_data.get("coin_info_patch", {}))
 
         # 构建 context（注入聪明钱信号作为核心上下文）
         content_hints = signals_data.get("content_hints", [])

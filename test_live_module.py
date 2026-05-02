@@ -5,6 +5,8 @@
 import sys, os, time, json
 sys.path.insert(0, os.path.dirname(__file__))
 
+__test__ = False
+
 PASS = "✅ PASS"
 FAIL = "❌ FAIL"
 results = []
@@ -21,12 +23,6 @@ def test(name, fn):
         print(f"  {FAIL}  {name}  ({elapsed:.1f}s)  → {e}")
         results.append((name, False))
 
-print("\n" + "═"*60)
-print("  数字人直播模块 — 集成测试报告")
-print("═"*60)
-
-# T1: 行情分析引擎
-print("\n[T1] 行情分析引擎")
 def t1():
     from live.engine.market_analyzer import get_full_market_report
     report = get_full_market_report()
@@ -39,10 +35,6 @@ def t1():
     print(f"     BTC: ${overview['btc_price']:,.0f} | 情绪: {overview['market_sentiment']}")
     print(f"     主流币: {len(majors)}个 | 热点推荐: {len(trending)}个")
     print(f"     Top热点: {trending[0]['symbol']} {trending[0]['change_pct']:+.2f}% [{trending[0]['recommend_level']}]")
-test("行情数据获取（BTC+主流币+热点）", t1)
-
-# T2: 话术生成器
-print("\n[T2] 话术生成器")
 def t2():
     from live.engine.market_analyzer import load_cached_report
     from live.engine.script_generator import generate_full_live_script
@@ -57,10 +49,6 @@ def t2():
     print(f"     开场白: {scripts['opening'][:60]}...")
     print(f"     大盘分析: {scripts['market_overview'][:60]}...")
     print(f"     热点推荐: {scripts['trending_recommendation'][:60]}...")
-test("完整直播脚本生成（6段话术）", t2)
-
-# T3: 弹幕问答 AI
-print("\n[T3] 弹幕问答 AI")
 def t3():
     from live.engine.market_analyzer import load_cached_report
     from live.engine.danmu_ai import generate_danmu_reply, classify_danmu, MOCK_DANMUS
@@ -79,10 +67,6 @@ def t3():
         reply = generate_danmu_reply(text, username, report)
         assert len(reply) > 10, f"回复太短: {reply}"
         print(f"     [{cat}] {username}: {text[:20]} → {reply[:40]}...")
-test("弹幕分类 + AI 问答生成", t3)
-
-# T4: 小车管理器
-print("\n[T4] 小车管理器")
 def t4():
     from live.cart.cart_manager import CartManager, generate_cart_config
     from live.engine.market_analyzer import load_cached_report
@@ -107,10 +91,6 @@ def t4():
 
     print(f"     商品数: {len(items)} | BTC话术: {script_btc[:40]}...")
     print(f"     热点商品: {[i['name'] for i in config['trending_items'][:2]]}")
-test("小车商品管理 + 动态配置", t4)
-
-# T5: 直播控制器（单次运行）
-print("\n[T5] 直播控制器（端到端单次运行）")
 def t5():
     from live.stream.live_controller import LiveController
     controller = LiveController()
@@ -125,12 +105,33 @@ def t5():
     print(f"     播报: {status['stats']['total_scripts_sent']}次 | "
           f"弹幕: {status['stats']['total_danmu_replied']}条 | "
           f"小车: {status['stats']['total_cart_pushes']}次")
-test("直播控制器端到端运行", t5)
+def main():
+    print("\n" + "═"*60)
+    print("  数字人直播模块 — 集成测试报告")
+    print("═"*60)
 
-# 汇总
-print("\n" + "═"*60)
-passed = sum(1 for _, ok in results if ok)
-total = len(results)
-print(f"  总体通过率: {passed}/{total} ({100*passed//total}%)")
-print(f"  {'🎉 数字人直播模块全部测试通过！' if passed == total else '⚠️  存在失败项，请检查上方错误信息。'}")
-print("═"*60 + "\n")
+    print("\n[T1] 行情分析引擎")
+    test("行情数据获取（BTC+主流币+热点）", t1)
+
+    print("\n[T2] 话术生成器")
+    test("完整直播脚本生成（6段话术）", t2)
+
+    print("\n[T3] 弹幕问答 AI")
+    test("弹幕分类 + AI 问答生成", t3)
+
+    print("\n[T4] 小车管理器")
+    test("小车商品管理 + 动态配置", t4)
+
+    print("\n[T5] 直播控制器（端到端单次运行）")
+    test("直播控制器端到端运行", t5)
+
+    print("\n" + "═"*60)
+    passed = sum(1 for _, ok in results if ok)
+    total = len(results)
+    print(f"  总体通过率: {passed}/{total} ({100*passed//total}%)")
+    print(f"  {'🎉 数字人直播模块全部测试通过！' if passed == total else '⚠️  存在失败项，请检查上方错误信息。'}")
+    print("═"*60 + "\n")
+
+
+if __name__ == "__main__":
+    main()

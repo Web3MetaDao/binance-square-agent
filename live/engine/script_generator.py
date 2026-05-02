@@ -7,8 +7,14 @@
 import os
 import json
 import time
+from datetime import datetime
+from pathlib import Path
 from typing import Optional
 from openai import OpenAI
+
+BASE_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = BASE_DIR / "data"
+LIVE_SCRIPT_FILE = DATA_DIR / "live_script.json"
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
@@ -283,6 +289,7 @@ def generate_full_live_script(market_report: dict, cart_items: list = None) -> d
     trending = market_report.get("trending", [])
 
     scripts = {
+        "generated_at": datetime.utcnow().isoformat(timespec="seconds"),
         "opening": generate_opening(market_report),
         "market_overview": generate_market_overview_script(market_report),
         "major_coins": [generate_major_coin_script(c) for c in majors],
@@ -292,7 +299,8 @@ def generate_full_live_script(market_report: dict, cart_items: list = None) -> d
     }
 
     # 保存脚本
-    with open("/home/ubuntu/clawself_agent/data/live_script.json", "w") as f:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    with open(LIVE_SCRIPT_FILE, "w", encoding="utf-8") as f:
         json.dump(scripts, f, ensure_ascii=False, indent=2)
 
     print(f"[话术生成器] 脚本生成完成，共 {len(scripts)} 个段落")
@@ -300,9 +308,10 @@ def generate_full_live_script(market_report: dict, cart_items: list = None) -> d
 
 
 if __name__ == "__main__":
-    import sys
-    sys.path.insert(0, "/home/ubuntu/clawself_agent/live/engine")
-    from market_analyzer import get_full_market_report
+    try:
+        from live.engine.market_analyzer import get_full_market_report
+    except ModuleNotFoundError:
+        from market_analyzer import get_full_market_report
 
     report = get_full_market_report()
     scripts = generate_full_live_script(report)

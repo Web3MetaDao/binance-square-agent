@@ -1,0 +1,160 @@
+2026-05-01 06:20:23 [pipeline_loop] 🚀 策略研究管线 7×24 循环启动
+2026-05-01 06:20:23 [pipeline_loop] 配置: 每轮间隔=6h, 总天数=7d
+2026-05-01 06:20:23 [pipeline_loop] 启动时间: 2026-05-01T05:20:00+00:00
+2026-05-01 06:20:23 [pipeline_loop] 截止时间: 2026-05-08T05:20:00+00:00
+2026-05-01 06:20:23 [pipeline_loop] 已完成轮次: 1
+2026-05-01 06:20:23 [pipeline_loop] ━━━ 第 2 轮开始 ━━━
+2026-05-01 06:20:29 [httpx] HTTP Request: GET https://raw.githubusercontent.com/freqtrade/freqtrade-strategies/main/user_data/strategies/CombinedBinHAndCluc.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:29 [httpx] HTTP Request: GET https://raw.githubusercontent.com/freqtrade/freqtrade-strategies/main/user_data/strategies/NostalgiaForInfinity.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:29 [httpx] HTTP Request: GET https://raw.githubusercontent.com/freqtrade/freqtrade-strategies/main/user_data/strategies/SMAOffsetProtectorOpt.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:29 [httpx] HTTP Request: GET https://raw.githubusercontent.com/freqtrade/freqtrade-strategies/main/user_data/strategies/BinHp105.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:29 [httpx] HTTP Request: GET https://raw.githubusercontent.com/freqtrade/freqtrade-strategies/main/user_data/strategies/ElliotV5.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:29 [httpx] HTTP Request: GET https://raw.githubusercontent.com/freqtrade/freqtrade-strategies/main/user_data/strategies/Strategy003.py "HTTP/1.1 200 OK"
+2026-05-01 06:20:30 [httpx] HTTP Request: GET https://raw.githubusercontent.com/wilsonfreitas/awesome-quant/main/README.md "HTTP/1.1 200 OK"
+2026-05-01 06:20:30 [httpx] HTTP Request: GET https://raw.githubusercontent.com/polakowo/vectorbt-strategies/main/tutorials/Portfolio_Optimization.ipynb "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:30 [httpx] HTTP Request: GET https://raw.githubusercontent.com/mentat786/awesome-quant/main/README.md "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:30 [httpx] HTTP Request: GET https://raw.githubusercontent.com/jesse-ai/jesse/master/jesse/indicators/acceleration.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:30 [httpx] HTTP Request: GET https://raw.githubusercontent.com/jesse-ai/jesse/master/jesse/indicators/channel.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:30 [httpx] HTTP Request: GET https://raw.githubusercontent.com/jesse-ai/jesse/master/jesse/indicators/ichimoku.py "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:31 [httpx] HTTP Request: GET https://raw.githubusercontent.com/jesse-ai/jesse/master/jesse/indicators/supertrend.py "HTTP/1.1 200 OK"
+2026-05-01 06:20:31 [research.harvester] Harvested 3 items from github
+2026-05-01 06:20:31 [httpx] HTTP Request: GET http://export.arxiv.org/api/query?search_query=all%3A%22crypto+trading%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:31 [httpx] HTTP Request: GET https://export.arxiv.org/api/query?search_query=all%3A%22crypto+trading%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 200 OK"
+2026-05-01 06:20:34 [httpx] HTTP Request: GET http://export.arxiv.org/api/query?search_query=all%3A%22quantitative+finance+machine+learning%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:34 [httpx] HTTP Request: GET https://export.arxiv.org/api/query?search_query=all%3A%22quantitative+finance+machine+learning%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 200 OK"
+2026-05-01 06:20:37 [httpx] HTTP Request: GET http://export.arxiv.org/api/query?search_query=all%3A%22market+microstructure+deep+learning%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:38 [httpx] HTTP Request: GET https://export.arxiv.org/api/query?search_query=all%3A%22market+microstructure+deep+learning%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 200 OK"
+2026-05-01 06:20:41 [httpx] HTTP Request: GET http://export.arxiv.org/api/query?search_query=all%3A%22reinforcement+learning+trading%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:41 [httpx] HTTP Request: GET https://export.arxiv.org/api/query?search_query=all%3A%22reinforcement+learning+trading%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 200 OK"
+2026-05-01 06:20:44 [httpx] HTTP Request: GET http://export.arxiv.org/api/query?search_query=all%3A%22LSTM+volatility+cryptocurrency%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:44 [httpx] HTTP Request: GET https://export.arxiv.org/api/query?search_query=all%3A%22LSTM+volatility+cryptocurrency%22&start=0&max_results=2&sortBy=submittedDate&sortOrder=descending "HTTP/1.1 200 OK"
+2026-05-01 06:20:44 [research.harvester] Harvested 6 items from arxiv
+2026-05-01 06:20:44 [httpx] HTTP Request: GET https://jumpcrypto.com/feed/ "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:45 [httpx] HTTP Request: GET https://jumpcrypto.com/feed "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:45 [httpx] HTTP Request: GET https://jumpcrypto.com/feed/ "HTTP/1.1 301 Moved Permanently"
+2026-05-01 06:20:45 [httpx] HTTP Request: GET https://jumpcrypto.com/feed "HTTP/1.1 404 Not Found"
+2026-05-01 06:20:45 [httpx] HTTP Request: GET https://blog.janestreet.com/feed.xml "HTTP/1.1 200 OK"
+2026-05-01 06:20:45 [research.harvester] Harvested 10 items from blog
+2026-05-01 06:20:45 [research.pipeline] Harvest complete: 19 total items
+2026-05-01 06:20:46 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:20:46 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:20:48 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:20:48 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:20:52 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:20:52 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:20:53 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:20:53 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:20:55 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:20:55 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:00 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:00 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:00 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:00 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:02 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:02 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:07 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:07 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:07 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:07 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:09 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:09 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:13 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:13 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:14 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:14 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:16 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:16 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:20 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:20 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:21 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:21 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:23 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:23 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:27 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:27 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:28 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:28 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:30 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:30 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:34 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:34 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:34 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:34 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:37 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:37 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:41 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:41 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:41 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:41 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:44 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:44 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:48 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:48 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:48 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:48 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:50 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:50 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:55 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:55 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:55 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:55 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:21:57 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:21:57 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:01 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:01 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:02 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:02 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:04 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:04 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:08 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:08 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:09 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:09 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:11 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:11 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:15 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:15 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:15 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:15 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:18 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:18 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:22 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:22 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:22 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:22 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:24 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:24 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:29 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:29 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:29 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:29 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:31 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:31 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:36 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:36 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:36 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:36 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:38 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:38 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:42 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:42 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:43 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:43 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:45 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:45 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:49 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:49 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:49 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:49 [research.parsers.paper_parser] API call attempt 1/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:52 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:52 [research.parsers.paper_parser] API call attempt 2/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:56 [httpx] HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 401 Unauthorized"
+2026-05-01 06:22:56 [research.parsers.paper_parser] API call attempt 3/3 failed: Error code: 401 - {'error': {'message': 'Authentication Fails, Your api key: ****35f6 is invalid', 'type': 'authentication_error', 'param': None, 'code': 'invalid_request_error'}}
+2026-05-01 06:22:56 [research.pipeline] Parsed 0 items (19 errors)
+2026-05-01 06:22:56 [research.pipeline] No candidates found — skipping fusion (no LLM call).
+2026-05-01 06:22:56 [research.pipeline] No fusion produced — skipping review, backtest, and deploy gate.
+2026-05-01 06:22:56 [pipeline_loop] ✅ 第 2 轮完成
+2026-05-01 06:22:56 [pipeline_loop]   融合ID: None
+2026-05-01 06:22:56 [pipeline_loop]   审批: 未通过
+2026-05-01 06:22:56 [pipeline_loop] ⏳ 等待 6h 后下一轮...
+2026-05-01 06:22:56 [pipeline_loop]    下一轮预计: 2026-05-01T12:22:56.513445+00:00

@@ -16,6 +16,14 @@ import os
 import logging
 from typing import Optional
 
+try:
+    from utils.price_sync import PRICE_FRESHNESS_TTL, is_price_fresh
+except Exception:  # pragma: no cover - keep adapter importable in minimal test envs
+    PRICE_FRESHNESS_TTL = 600
+
+    def is_price_fresh(price_info: Optional[dict], max_age: float = PRICE_FRESHNESS_TTL) -> bool:
+        return False
+
 logger = logging.getLogger(__name__)
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -57,6 +65,7 @@ FUTURES_TAG_MAP = {
 
 # 固定免责声明
 DISCLAIMER = "⚠️免责声明：\n本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。"
+CTA_FIXED = "💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄"
 
 # 通用话题标签
 GENERAL_TAGS = "#加密货币 #合约分析 #山寨币观察 #交易策略分享"
@@ -71,7 +80,7 @@ PROMPT_TEMPLATES = {
 - 代币：{coin}
 - {whale_count} 个 Hyperliquid 顶级大户中 {long_count} 个正在做多，多头占比 {long_ratio:.0f}%
 - 大户总持仓规模：${total_size_m:.1f}M
-- 当前价格：${mark_px:,.2f}，24H涨跌 {change_24h:+.1f}%
+- {price_context_line}
 - 资金费率：{funding_rate:+.4f}%（{funding_signal}）
 
 请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
@@ -81,7 +90,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
@@ -93,7 +102,7 @@ PROMPT_TEMPLATES = {
 - 代币：{coin}
 - {whale_count} 个 Hyperliquid 顶级大户中 {short_count} 个正在做空，空头占比 {short_ratio:.0f}%
 - 大户总持仓规模：${total_size_m:.1f}M
-- 当前价格：${mark_px:,.2f}，24H涨跌 {change_24h:+.1f}%
+- {price_context_line}
 - 资金费率：{funding_rate:+.4f}%（{funding_signal}）
 
 请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
@@ -103,7 +112,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
@@ -114,7 +123,7 @@ PROMPT_TEMPLATES = {
 当前资金费率异常信号：
 - 代币：{coin}
 - 资金费率：{funding_rate:+.4f}%（{funding_signal}）
-- 当前价格：${mark_px:,.2f}，24H涨跌 {change_24h:+.1f}%
+- {price_context_line}
 
 请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
@@ -123,7 +132,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」
 """,
@@ -131,10 +140,10 @@ PROMPT_TEMPLATES = {
     "OI_SURGE": """
 你是一个在币安广场上拥有百万粉丝的加密货币 KOL，专门研究链上持仓数据。
 
-当前 OI 异动信号：
+当前 OI：
 - 代币：{coin}
-- 当前 OI：${oi_usd_m:.1f}M，当前价格：${mark_px:,.2f}
-- 24H涨跌 {change_24h:+.1f}%，24H成交量：${day_vol_m:.1f}M
+- 当前 OI：${oi_usd_m:.1f}M，24H成交量：${day_vol_m:.1f}M
+- {price_context_line}
 
 请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
 
@@ -143,7 +152,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」
 """,
@@ -156,7 +165,7 @@ PROMPT_TEMPLATES = {
 最新链上巨鲸信号（来自 HyperInsight）：
 - 代币：{coin}
 - 操作：{action}（做多），规模：约 ${size_usd_m:.2f}M
-- 当前价格：${price:,.2f}，当前浮盈：{pnl_pct:+.1f}%
+- {price_context_line}，当前浮盈：{pnl_pct:+.1f}%
 - 巨鲸背景：{note}
 
 请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
@@ -166,7 +175,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
@@ -177,7 +186,7 @@ PROMPT_TEMPLATES = {
 最新链上巨鲸信号（来自 HyperInsight）：
 - 代币：{coin}
 - 操作：{action}（做空），规模：约 ${size_usd_m:.2f}M
-- 当前价格：${price:,.2f}，当前浮盈：{pnl_pct:+.1f}%
+- {price_context_line}，当前浮盈：{pnl_pct:+.1f}%
 - 巨鲸背景：{note}
 
 请生成一条币安广场短贴，严格按以下格式输出（不要加任何额外内容）：
@@ -187,7 +196,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」「据悉」「据了解」
 """,
@@ -207,7 +216,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」
 """,
@@ -227,7 +236,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」
 """,
@@ -247,7 +256,7 @@ PROMPT_TEMPLATES = {
 
 {general_tags}
 {disclaimer} {cashtag_line}
-
+{cta_fixed}
 只输出上述格式的内容，不要输出任何解释、前缀或引号。
 禁止使用的词：「值得关注」「仅供参考」
 """,
@@ -255,6 +264,47 @@ PROMPT_TEMPLATES = {
 
 # CTA 已内嵌在格式要求中（免责声明末尾的 $CashTag），不再单独追加
 CTA_TEMPLATES = [""]  # 保留兼容性，实际不使用
+
+
+def _price_metadata_from_signal(signal: dict) -> dict:
+    """Extract root-level freshness metadata produced by utils.price_sync."""
+    data = signal.get("data", {}) if isinstance(signal, dict) else {}
+    price_ts = signal.get("_price_ts", data.get("_price_ts") or data.get("ts"))
+    synced = signal.get("_price_synced", data.get("_price_synced"))
+    is_live = signal.get("is_live", data.get("is_live"))
+    if is_live is None and synced is not None:
+        is_live = is_price_fresh({"ts": price_ts}, max_age=PRICE_FRESHNESS_TTL)
+    source = signal.get("_price_source", data.get("_price_source", "binance_futures"))
+    return {
+        "_price_synced": bool(synced),
+        "_price_source": source,
+        "_price_ts": price_ts,
+        "source": signal.get("source", data.get("source", source)),
+        "is_live": bool(is_live),
+        "warning_reason": signal.get("warning_reason", data.get("warning_reason")),
+    }
+
+
+def _fresh_price_fields(signal: dict) -> dict:
+    """Return exact price fields only when signal carries a fresh futures price contract."""
+    data = signal.get("data", {}) if isinstance(signal, dict) else {}
+    meta = _price_metadata_from_signal(signal)
+    mark_px = data.get("mark_px", data.get("price", 0))
+    if mark_px and meta["is_live"]:
+        return {
+            "mark_px": mark_px,
+            "price": data.get("price", mark_px),
+            "change_24h": data.get("change_24h", data.get("h24_change_pct", 0)),
+            "high_24h": data.get("high_24h"),
+            "low_24h": data.get("low_24h"),
+        }
+    return {
+        "mark_px": 0,
+        "price": 0,
+        "change_24h": data.get("change_24h", data.get("h24_change_pct", 0)),
+        "high_24h": None,
+        "low_24h": None,
+    }
 
 
 
@@ -403,6 +453,72 @@ def get_top_signal() -> Optional[dict]:
 
 # ── Prompt 构建 ────────────────────────────────────────────────────────────────
 
+def _signal_price_ts(signal: dict, data: dict) -> Optional[float]:
+    """Return the best-known price timestamp from signal/data metadata."""
+    for container in (data, signal):
+        for key in ("_price_ts", "price_ts", "ts"):
+            value = container.get(key) if isinstance(container, dict) else None
+            if value is None:
+                continue
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
+def _signal_has_price_freshness_contract(signal: dict, data: dict) -> bool:
+    """Whether this signal carries explicit freshness/sync metadata."""
+    for container in (data, signal):
+        if not isinstance(container, dict):
+            continue
+        if any(key in container for key in ("_price_synced", "is_live", "price_age_sec")):
+            return True
+        if any(key in container for key in ("_price_ts", "price_ts", "ts")):
+            return True
+    return False
+
+
+def _is_signal_price_fresh(signal: dict, data: dict) -> bool:
+    """Only explicit fresh/synced metadata may justify embedding exact prices."""
+    has_contract = _signal_has_price_freshness_contract(signal, data)
+    if not has_contract:
+        return False
+
+    explicit_live = data.get("is_live", signal.get("is_live"))
+    if explicit_live is False:
+        return False
+
+    explicit_synced = data.get("_price_synced", signal.get("_price_synced"))
+    if explicit_synced is False:
+        return False
+
+    ts = _signal_price_ts(signal, data)
+    if ts is None:
+        return False
+    return is_price_fresh({"ts": ts}, max_age=PRICE_FRESHNESS_TTL)
+
+
+def _price_context_line(signal: dict, data: dict, price_field: str = "mark_px", change_field: str = "change_24h") -> str:
+    """
+    Build a prompt line that avoids exact stale/unsynced prices.
+
+    Historical HL/TG payloads often contain mark/entry prices without freshness
+    metadata. Those can be useful for internal ranking but must not be described
+    to the LLM as current/exact prices unless price_sync has marked them fresh.
+    """
+    price = data.get(price_field)
+    if price is None and price_field != "price":
+        price = data.get("price")
+    change = data.get(change_field, data.get("change_24h", data.get("h24_change_pct", 0)))
+
+    if price and _is_signal_price_fresh(signal, data):
+        source = data.get("_price_source") or signal.get("_price_source")
+        prefix = "币安期货实时价格" if source == "binance_futures" else "当前价格"
+        return f"{prefix}：${float(price):,.2f}，24H涨跌 {float(change):+.1f}%"
+
+    return f"价格状态：未获取到新鲜同步价格，禁止在正文中编造或引用具体当前价；可只使用24H涨跌 {float(change):+.1f}% 和其他非价格信号"
+
 def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
     """
     将聪明钱信号转化为内容层 Prompt
@@ -413,6 +529,8 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
     data = signal["data"]
 
     futures_tags = FUTURES_TAG_MAP.get(coin, f"#{coin}USDT #{coin}合约")
+    price_meta = _price_metadata_from_signal(signal)
+    fresh_price = _fresh_price_fields(signal)
     # 构建 $CashTag 行（触发合约卡片）
     cashtag_line = f"${coin} $BTC $ETH $BNB"
     # 不再使用独立 CTA，格式已内嵌在 Prompt 中
@@ -440,14 +558,14 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             long_ratio=long_ratio,
             short_ratio=short_ratio,
             total_size_m=total_size_m,
-            mark_px=mark_px,
-            change_24h=change_24h,
+            price_context_line=_price_context_line(signal, data, "mark_px", "change_24h"),
             funding_rate=funding_rate,
             funding_signal=funding_signal,
             futures_tags=futures_tags,
             general_tags=GENERAL_TAGS,
             disclaimer=DISCLAIMER,
             cashtag_line=cashtag_line,
+            cta_fixed=CTA_FIXED,
         )
 
     elif sig_type == "FUNDING_EXTREME":
@@ -460,12 +578,12 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             coin=coin,
             funding_rate=funding_rate,
             funding_signal=funding_signal,
-            mark_px=mark_px,
-            change_24h=change_24h,
+            price_context_line=_price_context_line(signal, data, "mark_px", "change_24h"),
             futures_tags=futures_tags,
             general_tags=GENERAL_TAGS,
             disclaimer=DISCLAIMER,
             cashtag_line=cashtag_line,
+            cta_fixed=CTA_FIXED,
         )
 
     elif sig_type == "OI_SURGE":
@@ -476,14 +594,14 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
 
         prompt = PROMPT_TEMPLATES["OI_SURGE"].format(
             coin=coin,
-            mark_px=mark_px,
-            change_24h=change_24h,
+            price_context_line=_price_context_line(signal, data, "mark_px", "change_24h"),
             oi_usd_m=oi_usd_m,
             day_vol_m=day_vol_m,
             futures_tags=futures_tags,
             general_tags=GENERAL_TAGS,
             disclaimer=DISCLAIMER,
             cashtag_line=cashtag_line,
+            cta_fixed=CTA_FIXED,
         )
 
     elif sig_type in ["TG_WHALE_LONG", "TG_WHALE_SHORT"]:
@@ -497,13 +615,14 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             coin=coin,
             action=action,
             size_usd_m=size_usd_m,
-            price=price,
+            price_context_line=_price_context_line(signal, data, "price", "change_24h"),
             pnl_pct=pnl_pct,
             note=note,
             futures_tags=futures_tags,
             general_tags=GENERAL_TAGS,
             disclaimer=DISCLAIMER,
             cashtag_line=cashtag_line,
+            cta_fixed=CTA_FIXED,
         )
 
     elif sig_type in ["TG_OI_SURGE", "TG_OI_DROP"]:
@@ -522,6 +641,7 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             general_tags=GENERAL_TAGS,
             disclaimer=DISCLAIMER,
             cashtag_line=cashtag_line,
+            cta_fixed=CTA_FIXED,
         )
 
     elif sig_type == "TG_COMBINED":
@@ -542,10 +662,26 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
             general_tags=GENERAL_TAGS,
             disclaimer=DISCLAIMER,
             cashtag_line=cashtag_line,
+            cta_fixed=CTA_FIXED,
         )
 
     else:
         prompt = f"请生成一条关于 {coin} 的高吸引力广场短贴，包含标签 {futures_tags}"
+
+    coin_info_patch = {
+        "mark_px": fresh_price["mark_px"],
+        "price": fresh_price["price"],
+        "change_24h": fresh_price["change_24h"],
+        "high_24h": fresh_price["high_24h"],
+        "low_24h": fresh_price["low_24h"],
+        "_price_synced": price_meta["_price_synced"],
+        "_price_source": price_meta["_price_source"],
+        "_price_ts": price_meta["_price_ts"],
+        "source": price_meta["source"],
+        "is_live": price_meta["is_live"],
+    }
+    if price_meta.get("warning_reason"):
+        coin_info_patch["warning_reason"] = price_meta["warning_reason"]
 
     return {
         "prompt":      prompt,
@@ -553,6 +689,8 @@ def build_content_prompt(signal: dict, cta_index: int = 0) -> dict:
         "futures_tags": futures_tags,
         "signal_type": sig_type,
         "cta":         cta,
+        "price_metadata": price_meta,
+        "coin_info_patch": coin_info_patch,
     }
 
 

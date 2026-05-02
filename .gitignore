@@ -13,15 +13,19 @@ build/
 .env.*
 secrets.py
 
-# 运行时数据（由程序自动生成，不上传）
-data/agent_state.json
-data/market_context.json
-data/persona.md
+# 状态 / 配额 / 运行期文件
+/data/agent_state.json
+/data/agent_state.json.lock
+/data/post_flow.lock
+/data/market_context.json
+
 data/w2e_top_creators.json
 data/leaderboard_cache.json
 data/live_market_report.json
 data/live_script.json
 data/smart_money_signal.json
+data/tg_signals_cache.json
+data/binance_agent_tg.session
 logs/
 
 # IDE

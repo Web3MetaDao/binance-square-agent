@@ -9,17 +9,12 @@
   - 支持 RTMP 推流到各大直播平台
 """
 import os
-import sys
 import time
 import json
 import threading
 import requests
 from datetime import datetime
 from typing import Optional
-
-sys.path.insert(0, "/home/ubuntu/clawself_agent")
-sys.path.insert(0, "/home/ubuntu/clawself_agent/live/engine")
-sys.path.insert(0, "/home/ubuntu/clawself_agent/live/cart")
 
 from live.engine.market_analyzer import get_full_market_report, load_cached_report
 from live.engine.script_generator import generate_full_live_script

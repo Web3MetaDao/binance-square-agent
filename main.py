@@ -5,11 +5,12 @@
 用法：
   python3 main.py start             # 启动全自动发帖循环（热点扫描模式）
   python3 main.py once              # 执行单次发帖（热点模式）
-  python3 main.py w2e               # 启动 W2E 模式：每30分钟自动从排行榜博主帖子提取内容并发帖
+  python3 main.py w2e               # 启动 W2E 模式：每20分钟自动从排行榜博主帖子提取内容并发帖
   python3 main.py w2e-once          # W2E 模式单次测试（抓取一次帖子并发帖）
   python3 main.py smart-money       # 启动聪明钱模式：每15分钟扫描 Hyperliquid 大户持仓并发帖
   python3 main.py smart-money-once  # 聪明钱模式单次测试
   python3 main.py status            # 查看当前状态
+  python3 main.py status-json       # 输出机器可读 JSON 状态
   python3 main.py scan              # 只执行感知层扫描（不发帖）
   python3 main.py scan-sm           # 只执行聪明钱扫描（不发帖）
   python3 main.py build             # 启动灵魂提取访谈
@@ -39,10 +40,10 @@ def main():
         agent.start()
 
     elif cmd == "w2e":
-        print("[主程序] 启动 W2E 模式：每30分钟从 W2E 排行榜博主帖子提取内容并发帖")
+        print("[主程序] 启动 W2E 模式：每20分钟从 W2E 排行榜博主帖子提取内容并发帖")
         print("[主程序] 按 Ctrl+C 停止")
         agent = Orchestrator()
-        agent.start_w2e(interval_minutes=30)
+        agent.start_w2e(interval_minutes=20)
 
     elif cmd == "w2e-once":
         import json
@@ -78,6 +79,10 @@ def main():
     elif cmd == "status":
         agent = Orchestrator()
         agent.status()
+
+    elif cmd == "status-json":
+        agent = Orchestrator()
+        agent.status_json()
 
     elif cmd == "scan":
         state = load_state()

@@ -9,7 +9,11 @@ import json
 import time
 import os
 
+import pytest
+
 sys.path.insert(0, os.path.dirname(__file__))
+
+pytestmark = pytest.mark.integration
 
 def test_market_overview():
     """测试 1: 全市场 OI 与资金费率概览"""
@@ -37,8 +41,6 @@ def test_market_overview():
         print(f"✅ 24h 热点代币 Top 5:")
         for c in hot_coins:
             print(f"   {c['coin']:8s} 涨跌={c['change_24h']:+.1f}%  价格=${c['mark_px']:,.2f}")
-    
-    return True
 
 
 def test_whale_position_scan():
@@ -69,8 +71,6 @@ def test_whale_position_scan():
     else:
         print("⚠️  该地址暂无数据（可能账户余额不足或地址无效）")
         print("✅ 接口连通正常（返回 None 表示账户为空）")
-    
-    return True
 
 
 def test_recent_trades():
@@ -93,8 +93,6 @@ def test_recent_trades():
     else:
         print("⚠️  暂无成交记录")
         print("✅ 接口连通正常")
-    
-    return True
 
 
 def test_full_signal_aggregation():
@@ -117,8 +115,6 @@ def test_full_signal_aggregation():
     print(f"\n✅ 生成内容提示 {len(hints)} 条")
     for hint in hints[:3]:
         print(f"  • {hint}")
-    
-    return True
 
 
 def test_signal_to_content():
@@ -168,8 +164,6 @@ def test_signal_to_content():
         print(f"  期货标签: {content['futures_tags']}")
         print(f"  Prompt 长度: {len(content['prompt'])} 字符")
         print(f"  Prompt 预览:\n  {content['prompt'][:300].strip()}...")
-    
-    return True
 
 
 def test_address_database():
@@ -183,8 +177,6 @@ def test_address_database():
     print(f"✅ 当前地址库: {len(addresses)} 个地址")
     for addr in addresses[:5]:
         print(f"  {addr[:12]}...")
-    
-    return True
 
 
 def run_all_tests():

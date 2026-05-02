@@ -1,0 +1,302 @@
+{
+  "scanned_at": "2026-05-02T17:53:00.655929+00:00",
+  "time_window_min": 30,
+  "total_posts_scanned": 39,
+  "total_creators_scanned": 10,
+  "hot_topics": [
+    {
+      "coin": "LAB",
+      "mention_count": 18,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Anh Tú Jr",
+        "محترف عملات رقميه",
+        "Bit_Guru",
+        "Crypto_Hu",
+        "摩托BTC"
+      ],
+      "mention_share": 46.2
+    },
+    {
+      "coin": "OP",
+      "mention_count": 11,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move",
+        "BlockchainBaller",
+        "Anh Tú Jr",
+        "Bit_Guru"
+      ],
+      "mention_share": 28.2
+    },
+    {
+      "coin": "SOL",
+      "mention_count": 11,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move",
+        "BlockchainBaller",
+        "Bit_Guru"
+      ],
+      "mention_share": 28.2
+    },
+    {
+      "coin": "ORDI",
+      "mention_count": 11,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Crypto_Hu",
+        "محترف عملات رقميه"
+      ],
+      "mention_share": 28.2
+    },
+    {
+      "coin": "ACT",
+      "mention_count": 8,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move",
+        "BlockchainBaller",
+        "Bit_Guru"
+      ],
+      "mention_share": 20.5
+    },
+    {
+      "coin": "NOT",
+      "mention_count": 7,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller",
+        "Bit_Guru"
+      ],
+      "mention_share": 17.9
+    },
+    {
+      "coin": "ETH",
+      "mention_count": 5,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Mike On The Move",
+        "Bit_Guru",
+        "摩托BTC"
+      ],
+      "mention_share": 12.8
+    },
+    {
+      "coin": "XRP",
+      "mention_count": 4,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 10.3
+    },
+    {
+      "coin": "TRUMP",
+      "mention_count": 4,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 10.3
+    },
+    {
+      "coin": "MATIC",
+      "mention_count": 3,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 7.7
+    },
+    {
+      "coin": "NEAR",
+      "mention_count": 3,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 7.7
+    },
+    {
+      "coin": "BTC",
+      "mention_count": 2,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Mike On The Move",
+        "Bit_Guru"
+      ],
+      "mention_share": 5.1
+    },
+    {
+      "coin": "UNI",
+      "mention_count": 2,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 5.1
+    },
+    {
+      "coin": "ENA",
+      "mention_count": 1,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 2.6
+    },
+    {
+      "coin": "BNB",
+      "mention_count": 1,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 2.6
+    },
+    {
+      "coin": "ADA",
+      "mention_count": 1,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 2.6
+    },
+    {
+      "coin": "LINK",
+      "mention_count": 1,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 2.6
+    },
+    {
+      "coin": "TIA",
+      "mention_count": 1,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 2.6
+    },
+    {
+      "coin": "ARB",
+      "mention_count": 1,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move"
+      ],
+      "mention_share": 2.6
+    }
+  ],
+  "top10": [
+    {
+      "coin": "LAB",
+      "mention_count": 18,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Anh Tú Jr",
+        "محترف عملات رقميه",
+        "Bit_Guru",
+        "Crypto_Hu",
+        "摩托BTC"
+      ],
+      "mention_share": 46.2
+    },
+    {
+      "coin": "OP",
+      "mention_count": 11,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move",
+        "BlockchainBaller",
+        "Anh Tú Jr",
+        "Bit_Guru"
+      ],
+      "mention_share": 28.2
+    },
+    {
+      "coin": "SOL",
+      "mention_count": 11,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move",
+        "BlockchainBaller",
+        "Bit_Guru"
+      ],
+      "mention_share": 28.2
+    },
+    {
+      "coin": "ORDI",
+      "mention_count": 11,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Crypto_Hu",
+        "محترف عملات رقميه"
+      ],
+      "mention_share": 28.2
+    },
+    {
+      "coin": "ACT",
+      "mention_count": 8,
+      "sentiment": "bullish",
+      "source_creators": [
+        "Mike On The Move",
+        "BlockchainBaller",
+        "Bit_Guru"
+      ],
+      "mention_share": 20.5
+    },
+    {
+      "coin": "NOT",
+      "mention_count": 7,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller",
+        "Bit_Guru"
+      ],
+      "mention_share": 17.9
+    },
+    {
+      "coin": "ETH",
+      "mention_count": 5,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Mike On The Move",
+        "Bit_Guru",
+        "摩托BTC"
+      ],
+      "mention_share": 12.8
+    },
+    {
+      "coin": "XRP",
+      "mention_count": 4,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 10.3
+    },
+    {
+      "coin": "TRUMP",
+      "mention_count": 4,
+      "sentiment": "bullish",
+      "source_creators": [
+        "BlockchainBaller"
+      ],
+      "mention_share": 10.3
+    },
+    {
+      "coin": "MATIC",
+      "mention_count": 3,
+      "sentiment": "neutral",
+      "source_creators": [
+        "Bit_Guru"
+      ],
+      "mention_share": 7.7
+    }
+  ]
+}

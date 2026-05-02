@@ -35,8 +35,8 @@ _load_env_file()
 # ══════════════════════════════════════════════
 # 密鑰配置（通过环境变量注入，勿硬编码）
 # ══════════════════════════════════════════════
-SQUARE_API_KEY  = os.environ.get("SQUARE_API_KEY", "")
-OPENAI_API_KEY  = os.environ.get("OPENAI_API_KEY", "")
+SQUARE_API_KEY = os.environ.get("SQUARE_API_KEY", "")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 # ══════════════════════════════════════════════
 # OpenAI 第三方中转站配置

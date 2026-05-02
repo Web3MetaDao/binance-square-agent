@@ -15,9 +15,13 @@ import requests
 import json
 import os
 import time
-import websocket
 import threading
 from typing import Optional
+
+try:
+    import websocket
+except ModuleNotFoundError:  # optional dependency for live leaderboard refresh only
+    websocket = None
 
 # 数据路径
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
@@ -53,6 +57,10 @@ def subscribe_leaderboard_via_websocket(timeout: int = 30) -> list:
     通过 Hyperliquid WebSocket 订阅排行榜数据
     WebSocket 消息格式参考官方文档
     """
+    if websocket is None:
+        print("  [WS] 未安装 websocket-client，跳过实时排行榜订阅")
+        return []
+
     addresses = []
     received = threading.Event()
 

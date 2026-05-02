@@ -20,7 +20,7 @@ W2E 排行榜博主帖子内容提取 → LLM 改写 → 原创短贴生成器
 调用方式：
   - 独立运行：python3 w2e_post_generator.py
   - 集成调用：from w2e_post_generator import W2EPostGenerator; gen.run_once()
-  - 调度模式：gen.run_scheduler(interval_minutes=30)
+  - 调度模式：gen.run_scheduler(interval_minutes=20)
 """
 
 import json
@@ -33,6 +33,8 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+import utils.price_sync as price_sync
+
 sys.path.insert(0, os.path.dirname(__file__))
 
 from openai import OpenAI
@@ -41,8 +43,18 @@ from config.settings import (
     POST_MIN_CHARS, POST_MAX_CHARS, DAILY_LIMIT,
     WRITE_TO_EARN_URL,
 )
-from layers.executor import SquarePoster, QuotaController, log_post
-from core.state import load_state, save_state
+from layers.executor import (
+    SquarePoster,
+    QuotaController,
+    log_post,
+    _posting_transaction,
+    _refresh_state_binding,
+    _reserve_post_intent,
+    _finalize_post_success,
+    _clear_posting_intent,
+    _is_ambiguous_post_failure,
+)
+from core.state import load_state, save_state, update_state
 
 # ── 日志配置 ──────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -51,6 +63,22 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger("w2e_generator")
+
+
+def _quota_reason_code(coin: str, reason: str) -> str:
+    coin = (coin or "").upper().strip() or "UNKNOWN"
+    normalized = (reason or "").upper()
+    if "BANNED" in normalized:
+        return "banned"
+    if "每日上限" in reason:
+        return "daily_limit_reached"
+    if "分钟" in reason and "需再等" in reason:
+        return f"global_interval:{coin}"
+    if "一天只能发一次" in reason or "今日已发过" in reason:
+        return f"coin_daily_unique:{coin}"
+    if "h" in reason and "需再等" in reason:
+        return f"coin_cooldown:{coin}"
+    return f"quota_blocked:{coin}"
 
 # ── 常量 ──────────────────────────────────────────────────────────────────────
 BASE_DIR   = Path(__file__).parent
@@ -67,8 +95,13 @@ BANNED_PHRASES = [
 
 # CTA 池（内容挖矿引导）
 W2E_CTA_POOL = [
-    "💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄",
+    "💡 点下方币种标签看实时行情，也欢迎留言说说你的交易计划。",
 ]
+FIXED_DISCLAIMER = (
+    "⚠️免责声明：\n"
+    "本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。"
+)
+FIXED_HASHTAGS = "#交易复盘 #行情分析 #交易计划"
 
 
 # ── 核心类 ────────────────────────────────────────────────────────────────────
@@ -96,7 +129,25 @@ class W2EPostGenerator:
             return []
         with open(W2E_FILE, encoding="utf-8") as f:
             data = json.load(f)
-        creators = data.get("top_creators", [])
+        raw_creators = data.get("top_creators") or data.get("creators", [])
+        creators = []
+        for creator in raw_creators:
+            creators.append({
+                "rank": creator.get("rank"),
+                "nickname": creator.get("nickname", ""),
+                "earnings_usdc": creator.get("earnings_usdc", creator.get("earn_usdc", 0)),
+                "recent_posts": [
+                    {
+                        "id": post.get("id"),
+                        "text": post.get("text", ""),
+                        "views": post.get("views", post.get("view_count", 0)),
+                        "likes": post.get("likes", post.get("like_count", 0)),
+                        "hashtags": post.get("hashtags", []),
+                    }
+                    for post in creator.get("recent_posts", creator.get("posts", []))
+                    if post.get("text", "").strip()
+                ],
+            })
         logger.info(f"加载 {len(creators)} 位 W2E 博主数据")
         return creators
 
@@ -104,7 +155,31 @@ class W2EPostGenerator:
         """加载用户人设文件。"""
         if PERSONA_FILE.exists():
             return PERSONA_FILE.read_text(encoding="utf-8")[:800]
-        return "加密货币内容创作者，专注市场分析，风格直接犀利，有自己的独到见解。"
+        return "加密货币交易内容创作者，偏交易复盘和市场分析，重视价格结构、计划和风险收益表达。"
+
+    def _load_recent_post_texts(self, max_count: int = 6) -> list[str]:
+        """从 agent_state.json 的 post_history 字段加载近期已发帖子正文，
+        用于 LLM 提示词中禁止重复句式。"""
+        try:
+            from core.state import DATA_DIR
+            state_path = DATA_DIR / "agent_state.json"
+            if not state_path.exists():
+                return []
+            with open(state_path) as f:
+                state = json.load(f)
+            history = state.get("post_history") or []
+            texts = []
+            for entry in reversed(history):
+                content = (entry.get("content") or "").strip()
+                if not content or len(content) < 20:
+                    continue
+                preview = content[:100].replace("\n", " ")
+                texts.append(preview)
+                if len(texts) >= max_count:
+                    break
+            return texts
+        except Exception:
+            return []
 
     # ── 素材选取 ──────────────────────────────────────────────────────────────
 
@@ -230,13 +305,17 @@ class W2EPostGenerator:
         return cta.replace("${coin}", f"${coin}")
 
     def _extract_main_coin(self, text: str) -> str:
-        """从帖子文本中提取主要提及的代币（改进版：频率统计 + 扩展列表）。"""
-        # 优先提取 $SYMBOL 格式（取出现次数最多的）
+        """从帖子文本中提取主要提及的代币。"""
         known_non_coins = {"USD", "USDT", "USDC", "BUSD", "COIN", "TOKEN"}
-        cashtags = re.findall(r"\$([A-Z]{2,10})", text.upper())
+        future_markers = re.findall(r"\{future\}\(([A-Z0-9]{1,20})USDT\)", text.upper())
+        if future_markers:
+            return future_markers[0]
+        pair_markers = re.findall(r"\b([A-Z0-9]{1,20})USDT\b", text.upper())
+        if pair_markers:
+            return pair_markers[0]
+        cashtags = re.findall(r"\$([A-Z0-9]{1,15})", text.upper())
         valid_tags = [t for t in cashtags if t not in known_non_coins]
         if valid_tags:
-            # 返回出现次数最多的代币
             from collections import Counter
             return Counter(valid_tags).most_common(1)[0][0]
         # 扩展常见代币关键词匹配（按出现频率统计，取最多的）
@@ -245,7 +324,7 @@ class W2EPostGenerator:
             "MATIC", "DOT", "LINK", "UNI", "ATOM", "LTC", "BCH", "NEAR",
             "APT", "ARB", "OP", "SUI", "TON", "TRUMP", "PEPE", "WIF",
             "BONK", "NOT", "HYPE", "BSB", "TRADOOR", "AUCTION", "MAVIA",
-            "ORCA", "HYPER", "MOVR", "W",
+            "ORCA", "HYPER", "MOVR",
         ]
         text_upper = text.upper()
         # 统计每个代币出现次数，返回出现最多的
@@ -257,6 +336,145 @@ class W2EPostGenerator:
         if counts:
             return max(counts, key=counts.get)
         return "BTC"  # 默认
+
+    def _canonical_cashtags(self, coin: str) -> list[str]:
+        primary = (coin or "BTC").upper()
+        tags = []
+        for item in [primary, "BSB"]:
+            token = f"${item}"
+            if token not in tags:
+                tags.append(token)
+        return tags
+
+    def _live_price_line(self, coin: str) -> str:
+        try:
+            fp = price_sync.get_futures_price(coin)
+        except Exception as e:
+            logger.warning(f"[W2E生成器] 价格同步失败: {e}")
+            return ""
+        if not fp or not price_sync.is_price_fresh(fp, max_age=price_sync.PRICE_FRESHNESS_TTL):
+            return ""
+        return (
+            f"现在 {coin} 期货最新价 ${fp['price']:,.4f}，24h {fp['change_24h']:+.2f}%"
+            f"，日内区间 ${fp['low_24h']:,.4f}-${fp['high_24h']:,.4f}。"
+        )
+
+    def _dedupe_semantic_lines(self, lines: list[str], coin: str) -> list[str]:
+        prefix = f"看 {coin.upper()} 这段节奏，"
+        seen = set()
+        deduped = []
+        for line in lines:
+            stripped = (line or "").strip()
+            if not stripped:
+                continue
+            canonical = stripped
+            if canonical.startswith(prefix):
+                canonical = canonical[len(prefix):]
+            canonical = re.sub(r"[\s，。！？!?,、：:；;…]+", "", canonical.lower())
+            if not canonical or canonical in seen:
+                continue
+            seen.add(canonical)
+            deduped.append(stripped)
+        return deduped
+
+    def _has_untrusted_price_claim(self, line: str, trusted_live_line: str = "") -> bool:
+        stripped = (line or "").strip()
+        trusted = (trusted_live_line or "").strip()
+        if not stripped:
+            return False
+        if trusted and stripped == trusted:
+            return False
+        return bool(
+            re.search(r"\$\s*\d[\d,]*(?:\.\d+)?", stripped)
+            or re.search(r"\b\d[\d,]*(?:\.\d+)?\s*(?:美元|美金|u|U|usdt|USDT)\b", stripped)
+        )
+
+    def _format_fixed_template_post(self, raw: str, coin: str) -> str:
+        coin = (coin or "BTC").upper()
+        futures = f"{coin}USDT"
+        cleaned = (raw or "").replace("\r", "\n")
+        cleaned = re.sub(r"\{future\}\(([A-Z][A-Z0-9]{0,19})USDT\)", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\$([A-Z][A-Z0-9]{0,19})USDT\b", lambda m: f"${m.group(1).upper()}", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"#[A-Z][A-Z0-9]{0,19}USDT\b", "", cleaned, flags=re.IGNORECASE)
+        for bad, good in [
+            (f"{{future}}({futures})", ""),
+            (f"${futures}", f"${coin}"),
+            (f"#{futures}", ""),
+            ("#币安广场", ""),
+            ("#内容挖矿", ""),
+            (FIXED_DISCLAIMER, ""),
+            (W2E_CTA_POOL[0], ""),
+        ]:
+            cleaned = cleaned.replace(bad, good)
+
+        lines, seen = [], set()
+        for line in cleaned.splitlines():
+            stripped = line.strip()
+            if not stripped:
+                continue
+            if stripped.startswith("⚠️免责声明") or stripped.startswith("本文仅为个人行情观点分享"):
+                continue
+            if stripped.startswith("#") or stripped.startswith("💡"):
+                continue
+            key = stripped.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            lines.append(stripped)
+
+        if not lines:
+            # ── 多样性内容池：当 LLM 输出全部被过滤或不可用时 ──
+            _FALLBACK_TEMPLATES = [
+                f"{coin} 目前盘面结构比较清晰，关键位看量价配合再动手。",
+                f"{coin} 这个位置多空都有理由，自己要有主见，别跟风。",
+                f"{coin} 波动空间还在，但需要耐心等结构确认。",
+                f"{coin} 短线上多空争夺激烈，等一个方向选择。",
+                f"{coin} 盘面在收敛，快出方向了，提前想好应对比猜测重要。",
+                f"{coin} 价格在这个区间磨了很久，盯着量看，放量破位才是真。",
+                f"{coin} 这轮调整还没确认结束，等一个二次测试。",
+                f"{coin} 趋势还在，但节奏开始放缓了，别追，等回调接。",
+            ]
+            template = random.choice(_FALLBACK_TEMPLATES)
+            lines = [template, f"${coin} 先看量价配合，再决定方向。"]
+
+        title = lines[0]
+        body_lines = [line for line in lines[1:4] if line != title]
+        live_line = self._live_price_line(coin)
+        if self._has_untrusted_price_claim(title, trusted_live_line=live_line):
+            title = ""
+        if live_line and live_line not in body_lines:
+            body_lines.append(live_line)
+        if not any(f"${coin}" in line for line in [title] + body_lines):
+            # 加 $COIN cashtag 到正文中确保 W2E 计费触发
+            if body_lines:
+                body_lines.append(f"关注 ${coin} 的结构演变，等确认。")
+            else:
+                body_lines.append(f"等 {coin} 的关键位出来再看方向，提前猜没意义。")
+
+        normalized_body_lines = []
+        for line in body_lines:
+            stripped = line.strip()
+            if stripped == f"${coin}":
+                continue
+            if stripped.startswith(f"${coin} "):
+                stripped = f"{coin}：{stripped[len(coin)+2:]}"
+            if self._has_untrusted_price_claim(stripped, trusted_live_line=live_line):
+                continue
+            normalized_body_lines.append(stripped)
+        body_lines = self._dedupe_semantic_lines(normalized_body_lines, coin)
+        if not title:
+            if body_lines:
+                title = body_lines.pop(0)
+            else:
+                title = f"{coin} 这波节奏还没走完"
+
+        return "\n\n".join([
+            title,
+            "\n".join(body_lines).strip(),
+            " ".join(self._canonical_cashtags(coin)),
+            FIXED_HASHTAGS,
+            FIXED_DISCLAIMER,
+        ])
 
     def _build_rewrite_prompt(
         self,
@@ -277,9 +495,8 @@ class W2EPostGenerator:
         # ── 期货合约实时价格同步 ──
         price_line = ""
         try:
-            from utils.price_sync import get_futures_price
-            fp = get_futures_price(coin)
-            if fp:
+            fp = price_sync.get_futures_price(coin)
+            if fp and price_sync.is_price_fresh(fp, max_age=price_sync.PRICE_FRESHNESS_TTL):
                 price_line = (
                     f"\n币安期货实时行情（必须使用这些真实数据，不能编造）："
                     f"\n- {coin} 当前期货价格: ${fp['price']:,.4f}"
@@ -287,6 +504,8 @@ class W2EPostGenerator:
                     f"\n- 24h最高: ${fp['high_24h']:,.4f}，最低: ${fp['low_24h']:,.4f}"
                 )
                 logger.info(f"[W2E生成器] 💹 {coin} 期货实时价格已注入: ${fp['price']:,.4f} ({fp['change_24h']:+.2f}%)")
+            elif fp:
+                logger.warning(f"[W2E生成器] ⚠️ {coin} 价格存在但已过 freshness 窗口，跳过实时行情注入")
         except Exception as e:
             logger.warning(f"[W2E生成器] 价格同步失败: {e}")
 
@@ -325,7 +544,16 @@ class W2EPostGenerator:
             if tg_line:
                 logger.info(f"[W2E-TG] 📡 TG信号数据已注入: {coin} {sig_type}")
 
-        return f"""你是一位币安广场内容创作者，正在参与内容挖矿（Write to Earn）活动。
+        # ── 注入近期已发帖子（内容去重） ──
+        recent_texts = self._load_recent_post_texts()
+        recent_block = ""
+        if recent_texts:
+            recent_block = (
+                "\n\n⚠️ 注意避免与以下近期已发帖子的内容重复（包括句式和结构）：\n"
+                + "\n".join(f"- \"{t}\"" for t in recent_texts)
+            )
+
+        return f"""你是一位币安广场内容创作者，正在参与内容挖矿（Write to Earn）活动。{recent_block}
 
 你的人设背景：
 {persona}
@@ -340,20 +568,20 @@ class W2EPostGenerator:
 
 改写要求（严格遵守，违反任何一条则重写）：
 1. 字数 {POST_MIN_CHARS}~{POST_MAX_CHARS} 字（不含标签行和 CTA）
-2. 必须完全原创，不能抄袍原帖，要用自己的语言和视角重新表达
+2. 必须完全原创，不能抄袭原帖，要用自己的语言和视角重新表达
 3. 保留原帖的核心观点或市场信息，但角度、结构、措辞必须不同
-4. 第一句必须是强力 Hook，让人忍不住继续读（可以是反问、惊人数据、或争议性观点）
+4. 可以写故事，但必须有真实交易细节支撑，不要空喊情绪
 5. 正文中必须包含至少一个具体数字（价格、涨跌幅、时间等），如果有上面的实时行情数据则优先使用
-6. 结尾必须是一个引导互动的问句（如“你怎么看？”、“你上车了吗？”）
-7. 语气口语化、像真人说话，绝对禁止使用：{banned_str}
-8. 禁止任何八股文结构（首先/其次/综上等）
-9. 正文中必须包含 ${coin} cashtag，触发内容挖矿手续费返佣
-10. 最后一行必须是标签：#{coin} #币安广场 #内容挖矿 #加密货币
-11. 结尾加上免责声明和CTA（必须按此格式，不能改动）：
-⚠️免责声明：
-本文仅为个人行情观点分享，不构成任何投资建议，加密货币市场高波动、高风险，请理性交易、自行承担风险。 ${coin} $BTC $ETH $BNB
-💡 点击下方币种标签🏷️ 查看实时行情，广场内交易还能给我贡献一点挖矿收益😄
-只输出改写后的短贴正文（含最后的标签行、免责声明和CTA），不要输出任何解释、前缀或引号。"""
+6. 优先补足点位、周期、仓位计划、判断依据、失效条件
+7. 结尾可以是自然问句，也可以自然收住，不要为了互动强行提问
+8. 语气口语化、像真人说话，但不要硬凹老韭菜、神预测、逆天收益这类人设
+9. 不要连续复用“强钩子+惨痛经历+大数字+留悬念”套路
+10. 绝对禁止使用：{banned_str}
+11. 禁止任何八股文结构（首先/其次/综上等）
+12. 正文中必须包含 ${coin} cashtag，触发内容挖矿手续费返佣
+13. 不要输出免责声明、CTA、模板化标签行，这些由程序统一格式化
+14. 不要出现 ${coin}USDT、#{coin}USDT、{{future}}({coin}USDT)、#币安广场、#内容挖矿 等旧格式
+只输出改写后的短贴正文，不要输出任何解释、前缀或引号。"""
 
     def _rewrite_with_llm(self, reference: dict) -> tuple[str, str]:
         """
@@ -422,64 +650,109 @@ class W2EPostGenerator:
         _ok, _reason = quota.can_post(_preview_coin)
         if not _ok:
             logger.info(f"[W2E] 跳过 {_preview_coin}: {_reason}")
-            return {"success": False, "reason": f"coin_cooldown:{_preview_coin}"}
+            return {"success": False, "reason": _quota_reason_code(_preview_coin, _reason)}
 
-        # Step 3: LLM 改写
-        body, coin = self._rewrite_with_llm(reference)
-        if not body:
-            return {"success": False, "reason": "llm_failed"}
-
-        # Step 4: CTA 已在 LLM Prompt 中生成，直接使用 body
-        full_content = body
-
-        # Step 5: 打印预览
-        creator_name = reference["creator"]["nickname"]
-        earnings = reference["creator"]["earnings_usdc"]
-        print(f"\n{'─'*55}")
-        print(f"[W2E生成器] 参考博主: {creator_name} (收益 {earnings:.0f} USDC)")
-        print(f"[W2E生成器] 改写内容预览:")
-        print(full_content)
-        print(f"{'─'*55}")
-
-        # Step 6: 发布
-        result = self.poster.post(full_content)
-        now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        if result["success"]:
-            # 更新配额（使用虚拟 coin_info）
-            coin_info = {"coin": coin, "tier": "W2E", "futures": f"{coin}USDT"}
-            quota.record_post(coin)
-            logger.info(f"✅ 发帖成功 | {coin} | {result.get('url', '')}")
-            logger.info(f"📊 今日进度: {self.state['daily_count']}/{DAILY_LIMIT}")
-            log_post({
-                "time":     now_str,
-                "coin":     coin,
-                "tier":     "W2E",
-                "source":   f"W2E排行榜-{creator_name}",
-                "post_id":  result.get("post_id", ""),
-                "url":      result.get("url", ""),
-                "mock":     result.get("mock", False),
-                "preview":  full_content[:100],
-                "status":   "SUCCESS",
-            })
+        # Step 3: 双模式 ── 价格可用 → 数据帖；不可用 → LLM 改写
+        _price_info = price_sync.get_authoritative_price(_preview_coin)
+        if _price_info:
+            # 模式A：有价格 → 纯数据行情帖（不走LLM）
+            from layers.content import make_data_post
+            body = make_data_post(_preview_coin, _price_info)
+            coin = _preview_coin
+            creator_name = reference["creator"]["nickname"]
+            earnings = reference["creator"].get("earnings_usdc", 0)
+            print(f"\n{'─'*55}")
+            print(f"[W2E生成器] 📊 模式A — 数据帖 ({coin})")
+            print(body)
+            print(f"{'─'*55}")
         else:
-            code = result.get("code", "")
-            msg  = result.get("message", "")
-            logger.error(f"❌ 发帖失败 | code={code} | {msg}")
-            if code == "2000001":
-                self.state["status"] = "BANNED"
-                save_state(self.state)
-                logger.critical("🚨 账号封禁，系统熔断！")
-            log_post({
-                "time":       now_str,
-                "coin":       coin,
-                "tier":       "W2E",
-                "status":     "FAILED",
-                "error_code": code,
-                "error_msg":  msg,
-            })
+            # 模式B：无价格 → LLM 改写（走原流程）
+            body, coin = self._rewrite_with_llm(reference)
+            if not body:
+                # 模式B降级：LLM不可用时，使用纯分析模板（不含精确价格）
+                from layers.content import make_analysis_post
+                coin = self._extract_main_coin(reference["post"].get("text", ""))
+                body = make_analysis_post(coin)
+                print(f"\n{'─'*55}")
+                print(f"[W2E生成器] 📝 模式B降级 — 纯分析帖 (LLM不可用, {coin})")
+                print(body)
+                print(f"{'─'*55}")
+            body = self._format_fixed_template_post(body, coin)
 
-        return result
+            creator_name = reference["creator"]["nickname"]
+            earnings = reference["creator"].get("earnings_usdc", 0)
+            print(f"\n{'─'*55}")
+            print(f"[W2E生成器] 参考博主: {creator_name} (收益 {earnings:.0f} USDC)")
+            print(f"[W2E生成器] 改写内容预览:")
+            print(body)
+            print(f"{'─'*55}")
+
+        # Step 6: 发布（发布事务锁内二次校验，避免并发重复发与全局间隔穿透）
+        coin = quota._normalize_coin(coin)
+        full_content = body
+        with _posting_transaction(coin):
+            _refresh_state_binding(self.state, quota)
+            ok, reason = quota.can_post(coin)
+            if not ok:
+                logger.info(f"[W2E] 二次校验跳过 {coin}: {reason}")
+                return {"success": False, "reason": _quota_reason_code(coin, reason)}
+
+            intent, blocked_reason = _reserve_post_intent(
+                state=self.state,
+                content=full_content,
+                coin=coin,
+                source="w2e",
+                tier="W2E",
+                mock=getattr(self.poster, "mock_mode", False),
+            )
+            if blocked_reason:
+                logger.info(f"[W2E] 意图拦截跳过 {coin}: {blocked_reason}")
+                return {"success": False, "reason": blocked_reason}
+
+            result = self.poster.post(full_content)
+            now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            if result["success"]:
+                quota.record_post(coin)
+                _refresh_state_binding(self.state, quota)
+                _finalize_post_success(intent=intent, result=result, content=full_content)
+                _refresh_state_binding(self.state, quota)
+                logger.info(f"✅ 发帖成功 | {coin} | {result.get('url', '')}")
+                logger.info(f"📊 今日进度: {self.state['daily_count']}/{DAILY_LIMIT}")
+                log_post({
+                    "time":     now_str,
+                    "coin":     coin,
+                    "tier":     "W2E",
+                    "source":   f"W2E排行榜-{creator_name}",
+                    "post_id":  result.get("post_id", ""),
+                    "url":      result.get("url", ""),
+                    "mock":     result.get("mock", False),
+                    "preview":  full_content[:100],
+                    "status":   "SUCCESS",
+                })
+            else:
+                code = result.get("code", "")
+                msg  = result.get("message", "")
+                logger.error(f"❌ 发帖失败 | code={code} | {msg}")
+                if code == "2000001":
+                    latest = update_state(lambda current: {**current, "status": "BANNED"})
+                    if latest is not self.state:
+                        self.state.clear()
+                        self.state.update(latest)
+                    logger.critical("🚨 账号封禁，系统熔断！")
+                if not _is_ambiguous_post_failure(result):
+                    _clear_posting_intent(intent["id"])
+                    _refresh_state_binding(self.state, quota)
+                log_post({
+                    "time":       now_str,
+                    "coin":       coin,
+                    "tier":       "W2E",
+                    "status":     "FAILED",
+                    "error_code": code,
+                    "error_msg":  msg,
+                })
+
+            return result
 
     # ── 调度循环 ──────────────────────────────────────────────────────────────
 
